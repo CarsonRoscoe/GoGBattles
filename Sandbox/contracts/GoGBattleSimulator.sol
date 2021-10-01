@@ -17,6 +17,7 @@ contract GoGBattleSimulator {
     
     address _referee;
     uint256 _nextMatchID;
+    string _simulationRulesIPFS;
     
     constructor() {
         _referee = msg.sender;
@@ -32,14 +33,22 @@ contract GoGBattleSimulator {
         _referee = referee;
     }
 
+    function setSimulationIPFS(string ipfs) refereeOnly() public {
+        _simulationRulesIPFS = ipfs;
+    }
+
+    function getSimulationIPFS() public view returns(string) {
+        return _simulationRulesIPFS;
+    }
+
     function claimMatchComplete(address playerOne, address playerTwo, string memory ipfs) public {
         emit Match(playerOne, playerTwo, ipfs, _nextMatchID);
         _nextMatchID++;
     }
 
-    function confirmMatchResults(address winner, uint256 matchID, uint256 timestamp, uint256 prizeID) refereeOnly() public {
+    function confirmMatchResults(address winner, uint256 matchID, uint256 timestamp) refereeOnly() public {
         emit MatchResult(winner, matchID, timestamp);
-        emit RewardPrize(winner, prizeID);
+        // 
+        emit RewardPrize(winner);
     }
-
 }
