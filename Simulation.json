@@ -1,0 +1,4 @@
+function simulate(obj) {
+    console.info(obj);
+    return true;
+}
