@@ -6,34 +6,42 @@
 
 pragma solidity >=0.7.0 <0.9.0;
 
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+
 /**
  * @title Storage
  * @dev Store & retrieve value in a variable
  */
-contract GoGBattlesMatchHistory {
+contract GoGBattlesMatchHistory is AccessControlUpgradeable {
+    bytes32 public constant COORDINATOR_ROLE = keccak256("COORDINATOR_ROLE");
+    
     event Match(uint256 matchID, address winner, address loser, uint256 timestamp, string ipfs);
     
-    address _owner;
+    address _coordinator;
     uint256 _nextMatchID;
     
     mapping(string => uint256) matchIDLookup;
     mapping(uint256 => string) ipfsLookup;
     
     constructor() {
-        _owner = msg.sender;
+        __AccessControl_init();
+        
+        _coordinator = msg.sender;
         _nextMatchID = 1;
-    }
-    
-    modifier ownerOnly {
-        require(msg.sender == _owner);
-        _;
-    }
-    
-    function setOwner(address owner) ownerOnly() public {
+        
         
     }
     
-    function publishMatch(address winner, address loser, uint256 timestamp, string memory ipfs) ownerOnly() public {
+    modifier coordinatorOnly {
+        require(msg.sender == _coordinator);
+        _;
+    }
+    
+    function setOwner(address owner) coordinatorOnly() public {
+        _coordinator = owner;
+    }
+    
+    function publishMatch(address winner, address loser, uint256 timestamp, string memory ipfs) coordinatorOnly() public {
         require(matchIDLookup[ipfs] == 0);
         uint256 matchID = _nextMatchID++;
         ipfsLookup[matchID] = ipfs;
