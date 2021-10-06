@@ -6,7 +6,12 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol"
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155BurnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "./GoGBattlesGAME.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "./GoGBattlesCardFactory.sol";
+
+struct Card {
+    uint backedValue;
+}
 
 contract GoGBattlesCards is Initializable, ERC1155Upgradeable, AccessControlUpgradeable, ERC1155BurnableUpgradeable, UUPSUpgradeable {
     bytes32 public constant URI_SETTER_ROLE = keccak256("URI_SETTER_ROLE");
@@ -14,7 +19,12 @@ contract GoGBattlesCards is Initializable, ERC1155Upgradeable, AccessControlUpgr
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
     bytes32 public constant COORDINATOR_ROLE = keccak256("COORDINATOR_ROLE");
     
-    address _gogGameToken;
+    IERC20Upgradeable _token;
+    GoGBattlesCardFactory _factory;
+    
+    mapping(uint => uint) _valueOfCards;
+    mapping(address => uint) _valueOfAccount;
+    uint _nextTokenID;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
@@ -32,26 +42,58 @@ contract GoGBattlesCards is Initializable, ERC1155Upgradeable, AccessControlUpgr
         _setupRole(COORDINATOR_ROLE, msg.sender);
     }
     
-    function setGoGGameToken(address gogGameToken) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        _gogGameToken = gogGameToken;
+    function setGoGBattlesToken(address gogBattlesToken) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _token = IERC20Upgradeable(gogBattlesToken);
+    }
+    function setGoGBattlesCardFactory(address gogBattlesCardFactory) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _factory = GoGBattlesCardFactory(gogBattlesCardFactory);
     }
 
     function setURI(string memory newuri) public onlyRole(URI_SETTER_ROLE) {
         _setURI(newuri);
     }
 
-    function mint(uint256 id, uint256 amount, bytes memory data) public onlyRole(MINTER_ROLE) {
-        _mint(msg.sender, id, amount, data);
+    function mint(uint256 value, bytes memory data) public onlyRole(MINTER_ROLE) returns(uint256) {
+        uint id = _nextTokenID++;
+        _valueOfCards[id] = value;
+        _mint(msg.sender, id, 1, data);
+        return id;
     }
 
-    function mintBatch(address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data) public onlyRole(MINTER_ROLE) {
-        _mintBatch(to, ids, amounts, data);
+    function mintBatch(address to, uint256[] memory cardIds, uint256[] memory values) public onlyRole(MINTER_ROLE) returns(uint256[] memory) {
+        require(cardIds.length == values.length, "Arrays must be of the same size");
+        uint256[] memory ids;
+        uint256[] memory amounts;
+        for(uint i = 0; i < amounts.length; ++i) {
+            ids[i] = _nextTokenID++;
+            _valueOfCards[ids[i]] = values[i];
+            amounts[i] = 1;
+        }
+        _mintBatch(to, ids, amounts, "0x0");
+        return ids;
+    }
+    
+    function mintPack(address to, uint256 tokenAmount) public onlyRole(MINTER_ROLE) returns(uint256[] memory, uint256){
+        require(_token.transferFrom(msg.sender, address(this), tokenAmount), "Transfer must succeed");
+        (uint[] memory cardIds, uint[] memory cardValues, uint tokensRemaining) = _factory.rollCards(tokenAmount);
+        uint256[] memory tokenIds = mintBatch(to, cardIds, cardValues);
+        if (tokensRemaining > 0) {
+            _token.approve(msg.sender, tokensRemaining);
+        }
+        return (tokenIds, tokensRemaining);
     }
 
     function _authorizeUpgrade(address newImplementation) internal onlyRole(UPGRADER_ROLE) override {}
     
     function burnBatch(address owner, uint256[] memory ids, uint256[] memory amounts) public override onlyRole(COORDINATOR_ROLE) {
-        require(ids.length == amounts.length, "tokenIds and amounts must be same length arrays.");
+        super.burnBatch(owner, ids, amounts);
+    }
+    
+    function burnBatch(address owner, uint256[] memory ids) public onlyRole(COORDINATOR_ROLE) {
+        uint256[] memory amounts;
+        for(uint i = 0; i < ids.length; ++i) {
+            amounts[i] = 1;
+        }
         super.burnBatch(owner, ids, amounts);
     }
 
@@ -59,5 +101,31 @@ contract GoGBattlesCards is Initializable, ERC1155Upgradeable, AccessControlUpgr
 
     function supportsInterface(bytes4 interfaceId) public view override(ERC1155Upgradeable, AccessControlUpgradeable) returns (bool) {
         return super.supportsInterface(interfaceId);
+    }
+    
+    function backingValueOf(uint[] memory cardIds) public view returns(uint) {
+        uint result = 0;
+        for(uint i = 0; i < cardIds.length; ++i) {
+            result += _valueOfCards[cardIds[i]];
+        }
+        return result;
+    }
+    
+    function backingBalanceOf(address user) public view returns(uint) {
+        return _valueOfAccount[user];
+    }
+    
+    function _beforeTokenTransfer( address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data ) internal override virtual {
+        uint valueOfCards = 0;
+        for(uint i = 0; i < ids.length; ++i) {
+            valueOfCards += _valueOfCards[ids[i]];
+        }
+        
+        if (from != address(0)) {
+            _valueOfAccount[from] -= valueOfCards;
+        }
+        if (to != address(0)) {
+            _valueOfAccount[to] += valueOfCards;
+        }
     }
 }

@@ -23,25 +23,23 @@ contract GoGBattlesMatchHistory is AccessControlUpgradeable {
     mapping(string => uint256) matchIDLookup;
     mapping(uint256 => string) ipfsLookup;
     
-    constructor() {
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() initializer {}
+
+    function initialize() initializer public {
         __AccessControl_init();
+
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(COORDINATOR_ROLE, msg.sender);
         
-        _coordinator = msg.sender;
         _nextMatchID = 1;
-        
-        
     }
     
-    modifier coordinatorOnly {
-        require(msg.sender == _coordinator);
-        _;
-    }
-    
-    function setOwner(address owner) coordinatorOnly() public {
+    function setOwner(address owner) onlyRole(COORDINATOR_ROLE) public {
         _coordinator = owner;
     }
     
-    function publishMatch(address winner, address loser, uint256 timestamp, string memory ipfs) coordinatorOnly() public {
+    function publishMatch(address winner, address loser, uint256 timestamp, string memory ipfs) onlyRole(COORDINATOR_ROLE) public {
         require(matchIDLookup[ipfs] == 0);
         uint256 matchID = _nextMatchID++;
         ipfsLookup[matchID] = ipfs;

@@ -18,7 +18,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
     
 */
 
-contract GoGBattlesToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeable, AC, ERC20PermitUpgradeable, ERC20VotesUpgradeable, UUPSUpgradeable {
+contract GoGBattlesToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeable, AccessControlUpgradeable, ERC20PermitUpgradeable, ERC20VotesUpgradeable, UUPSUpgradeable {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
@@ -38,16 +38,19 @@ contract GoGBattlesToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgrad
         _setupRole(UPGRADER_ROLE, msg.sender);
     }
     
-    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
-        return super._transfer(_msgSender(), recipient, amount);
-    }
-
     function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
         _mint(to, amount);
     }
     
+    function mintBatch(address[] memory to, uint256[] memory amounts) public onlyRole(MINTER_ROLE) {
+        require(to.length == amounts.length, "To and Amounts arrays must be equivalent size");
+        for(uint i = 0; i < to.length; ++i) {
+            _mint(to[i], amounts[i]);
+        }
+    }
+    
     function burn(address account, uint256 amount) public onlyRole(BURNER_ROLE) {
-        
+        _burn(account, amount);
     }
 
     function _authorizeUpgrade(address newImplementation) internal onlyRole(UPGRADER_ROLE) override {
