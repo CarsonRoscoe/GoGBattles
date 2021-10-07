@@ -6,18 +6,23 @@ import { createUseStyles } from 'react-jss';
 export const cardSizes = {
     sm: 'sm',
     md: 'md',
-    lg: 'lg'
+    lg: 'lg',
+    xl: 'xl'
 };
 
 export const cardWidths = {
     [cardSizes.sm]: 100,
-    [cardSizes.md]: 200,
-    [cardSizes.lg]: 400
+    [cardSizes.md]: 150,
+    [cardSizes.lg]: 200,
+    [cardSizes.xl]: 400
 };
 
+// this is here because small cards were originally supposed to be square(1:1) with condensed detail, still might
+// explore this idea later
 export const cardHeightMultiplier = {
-    [cardSizes.sm]: 1,
+    [cardSizes.sm]: 1.4,
     [cardSizes.md]: 1.4,
+    [cardSizes.lg]: 1.4,
     [cardSizes.lg]: 1.4
 };
 
@@ -28,8 +33,8 @@ const useNameStyles = createUseStyles({
         fontSize: 17,
         fontWeight: 600,
         justifyContent: 'flex-start',
-        marginLeft: 5,
-        marginRight: 5
+        marginLeft: 2.5,
+        marginRight: 2.5
     }
 });
 
@@ -87,7 +92,10 @@ const Image = ({ image, height }) => {
 
     return (
         <div className={classes.container} style={{ height }}>
-            <div className={classes.wrapper}>{image}</div>
+            <div className={classes.wrapper}>
+                {/* @TODO image */}
+                {/*{image}*/}
+            </div>
         </div>
     );
 };
@@ -117,9 +125,14 @@ const Modifier = ({ modifier, height }) => {
     const classes = useModifierStyles();
 
     return (
-        <div className={classes.container} style={{ height }}>
+        <Textfit
+            mode="single"
+            max={14}
+            className={classes.container}
+            style={{ height }}
+        >
             {modifier}
-        </div>
+        </Textfit>
     );
 };
 
@@ -131,26 +144,13 @@ Modifier.propTypes = {
 const useStatsStyles = createUseStyles({
     container: {
         alignItems: 'center',
-        backgroundColor: 'light-gray',
-        borderRadius: '1px solid black',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
         width: '100%'
     },
-    item: {
-        alignItems: 'center',
-        display: 'flex',
-        fontSize: 20,
-        justifyContent: 'center',
-        margin: 5
-    },
-    row: {
-        alignItems: 'center',
-        display: 'flex',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        width: '85%'
+    td: {
+        textAlign: 'center'
     }
 });
 
@@ -164,50 +164,52 @@ const useStatsStyles = createUseStyles({
 const Stats = ({ offensive, defensive, height }) => {
     const classes = useStatsStyles();
 
+    const cellWidth = `${90 / 6}%`;
+    const cellPadding = `${10 / 6}%`;
+
     const Stat = ({ stat, value }) => (
-        <div className={classes.item}>
-            <img
-                src={`card-icons/${stat}.png`}
-                alt={stat}
-                height={32}
-                width={32}
-            />
-            ️<div>&nbsp;{value}</div>
-        </div>
+        <>
+            <td
+                className={classes.td}
+                style={{ width: cellWidth, paddingLeft: cellPadding }}
+            >
+                <img
+                    src={`card-icons/${stat}.png`}
+                    alt={stat}
+                    height={height * .3}
+                    width="auto"
+                />
+            </td>
+            <td
+                className={classes.td}
+                style={{ width: cellWidth, paddingRight: cellPadding }}
+            >
+                <Textfit
+                    mode="single"
+                    max={20}
+                >
+                    {value}
+                </Textfit>
+            </td>
+        </>
     );
 
     return (
         <div className={classes.container} style={{ height }}>
-            <div />
-            <div className={classes.row}>
-                <Stat
-                    stat="atkmelee"
-                    value={offensive[0]}
-                />
-                <Stat
-                    stat="atkmage"
-                    value={offensive[1]}
-                />
-                <Stat
-                    stat="atkrange"
-                    value={offensive[2]}
-                />
-            </div>
-            <div className={classes.row}>
-                <Stat
-                    stat="defmelee"
-                    value={defensive[0]}
-                />
-                <Stat
-                    stat="defmage"
-                    value={defensive[1]}
-                />
-                <Stat
-                    stat="defrange"
-                    value={defensive[2]}
-                />
-            </div>
-            <div />
+            <table>
+                <tbody>
+                    <tr>
+                        <Stat stat="atkmelee" value={offensive[0]} />
+                        <Stat stat="atkmage" value={offensive[1]} />
+                        <Stat stat="atkrange" value={offensive[2]} />
+                    </tr>
+                    <tr>
+                        <Stat stat="defmelee" value={defensive[0]} />
+                        <Stat stat="defmage" value={defensive[1]} />
+                        <Stat stat="defrange" value={defensive[2]} />
+                    </tr>
+                </tbody>
+            </table>
         </div>
     );
 };
@@ -229,10 +231,13 @@ const useBottomStyles = createUseStyles({
         width: '100%'
     },
     equipment: {
-        marginLeft: 5
+        marginLeft: 2.5,
+        width: '75%'
     },
     token: {
-        marinRight: 5
+        marginRight: 3.5,
+        textAlign: 'right',
+        width: '25%'
     }
 });
 
@@ -248,13 +253,21 @@ const Bottom = ({ equipmentClass, equipmentType, tokenValue, height }) => {
     const classes = useBottomStyles();
 
     return (
-        <div className={classes.container} style={{ height }}>
-            <div className={classes.equipment}>
+        <div className={classes.container}>
+            <Textfit
+                mode="single"
+                max={17}
+                className={classes.equipment}
+            >
                 {equipmentClass} ({equipmentType})
-            </div>
-            <div className={classes.token}>
+            </Textfit>
+            <Textfit
+                mode="single"
+                max={14}
+                className={classes.token}
+            >
                 {tokenValue}
-            </div>
+            </Textfit>
         </div>
     );
 };
@@ -269,7 +282,7 @@ Bottom.propTypes = {
 const useCardStyles = createUseStyles({
     container: {
         border: '2px solid black',
-        borderRadius: 10,
+        // borderRadius: 10, @TODO custom border styles
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
@@ -316,7 +329,7 @@ const Card = ({
     const CARD_HEIGHT = CARD_WIDTH * cardHeightMultiplier[size];
 
     const TITLE_HEIGHT = CARD_HEIGHT * 0.1;
-    const IMAGE_HEIGHT = CARD_HEIGHT * (size === cardSizes.sm ? 1 : 0.3);
+    const IMAGE_HEIGHT = CARD_HEIGHT * 0.3;
     const MODIFIER_HEIGHT = CARD_HEIGHT * 0.1;
     const STATS_HEIGHT = CARD_HEIGHT * 0.4;
     const BOTTOM_HEIGHT = CARD_HEIGHT * 0.1;

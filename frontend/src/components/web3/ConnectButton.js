@@ -57,6 +57,7 @@ const ConnectButton = ({
 };
 
 export const cardPropTypes = {
+    onClick : PropTypes.onClick
 };
 
 ConnectButton.propTypes = cardPropTypes;

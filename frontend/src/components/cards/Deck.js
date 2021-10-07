@@ -22,11 +22,12 @@ const useDeckStyles = createUseStyles({
 /**
  * @param {number} selected - Index of the selected card in the deck
  * @param {object[]} cards - Array of card objects
+ * @param {string} cardSize - Size of cards in deck
  * @param {function} onSelectedCallback - Callback function for selecting a card
  * @returns {JSX.Element}
  * @constructor
  */
-const Deck = ({ selected, cards, onSelectedCallback }) => {
+const Deck = ({ selected, cards, cardSize, onSelectedCallback }) => {
     const classes = useDeckStyles();
 
     const onScroll = () => {
@@ -39,8 +40,8 @@ const Deck = ({ selected, cards, onSelectedCallback }) => {
             onScroll={onScroll}
             style={{
                 height:
-                    cardWidths[cardSizes.md] *
-                        cardHeightMultiplier[cardSizes.md] +
+                    cardWidths[cardSize] *
+                        cardHeightMultiplier[cardSize] +
                     50
             }}
         >
@@ -56,7 +57,7 @@ const Deck = ({ selected, cards, onSelectedCallback }) => {
                     stats={card.stats}
                     tokenValue={card.tokenValue}
                     rarityType={card.rarityType}
-                    size={cardSizes.md}
+                    size={cardSize}
                     onSelectedCallback={() => onSelectedCallback(i)}
                 />
             ))}
@@ -67,6 +68,7 @@ const Deck = ({ selected, cards, onSelectedCallback }) => {
 Deck.propTypes = {
     selected: PropTypes.number.isRequired,
     cards: PropTypes.arrayOf(PropTypes.shape(cardPropTypes)),
+    cardSize: PropTypes.oneOf(Object.values(cardSizes)),
     onSelectedCallback: PropTypes.func.isRequired
 };
 
