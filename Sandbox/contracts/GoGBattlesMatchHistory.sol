@@ -1,7 +1,3 @@
-/**
- *Submitted for verification at polygonscan.com on 2021-09-27
-*/
-
 // SPDX-License-Identifier: GPL-3.0
 
 pragma solidity >=0.7.0 <0.9.0;
@@ -17,7 +13,6 @@ contract GoGBattlesMatchHistory is AccessControlUpgradeable {
     
     event Match(uint256 matchID, address winner, address loser, uint256 timestamp, string ipfs);
     
-    address _coordinator;
     uint256 _nextMatchID;
     
     mapping(string => uint256) matchIDLookup;
@@ -33,10 +28,6 @@ contract GoGBattlesMatchHistory is AccessControlUpgradeable {
         _setupRole(COORDINATOR_ROLE, msg.sender);
         
         _nextMatchID = 1;
-    }
-    
-    function setOwner(address owner) onlyRole(COORDINATOR_ROLE) public {
-        _coordinator = owner;
     }
     
     function publishMatch(address winner, address loser, uint256 timestamp, string memory ipfs) onlyRole(COORDINATOR_ROLE) public {

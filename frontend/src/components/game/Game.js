@@ -3,7 +3,9 @@ import { createUseStyles } from 'react-jss';
 import { getTestCards } from '../../test-data/cards';
 import Deck from '../cards/Deck';
 import Token from '../adventurers/Token';
+import ConnectButton from '../web3/ConnectButton';
 import TargetIndicator from './TargetIndicator';
+// import { connectAsync, getWeb3, getProvider} from '../../web3Helpers';
 
 const useGameStyles = createUseStyles({
     container: {
@@ -217,6 +219,10 @@ const Game = () => {
 
     return (
         <div className={classes.container}>
+            <div >
+            
+            <ConnectButton />
+            </div>
             <div className={classes.enemyTokens}>
                 <Token
                     tokenRef={enemyToken1Ref}

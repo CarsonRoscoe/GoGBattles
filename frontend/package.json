@@ -8,14 +8,19 @@
         "@testing-library/user-event": "^12.1.10",
         "prop-types": "^15.7.2",
         "react": "^17.0.2",
+        "react-bootstrap": "^1.6.4",
         "react-dom": "^17.0.2",
         "react-jss": "^10.8.0",
         "react-scripts": "4.0.3",
         "react-textfit": "^1.1.1",
+        "react-tinder-card": "^1.4.2",
         "react-xarrows": "^2.0.2",
         "reshake": "^1.2.3",
         "styled-components": "^5.3.1",
-        "web-vitals": "^1.0.1"
+        "web-vitals": "^1.0.1",
+        "web3": "^1.6.0",
+        "web3modal": "^1.9.4",
+        "yarn": "^1.22.15"
     },
     "scripts": {
         "start": "react-scripts start",
