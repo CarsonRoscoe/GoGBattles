@@ -6,6 +6,7 @@ import Card from '../cards/Card';
 import Button from '../inputs/Button';
 import useWindowDimensions from '../../hooks/useWindowDimensions';
 import { cardSizes } from '../cards/Card';
+import web3Helpers from '../../web3Helpers';
 
 const useLobbyStyles = createUseStyles({
     container: {
@@ -79,7 +80,7 @@ const getLobbySizes = (width) => {
     return { cardSize };
 };
 
-const testCards = getTestCards()
+const testCards = getTestCards();
 
 const Lobby = () => {
     const classes = useLobbyStyles();
@@ -87,6 +88,7 @@ const Lobby = () => {
 
     const cards = testCards; // @TODO fetch from account
     const [selectedCardIndex, setSelectedCardIndex] = useState(-1);
+    const [metaMaskButtonText, setMetaMaskButtonText] = useState(web3Helpers.getLoginState());
 
     const { cardSize } = getLobbySizes(width);
 
@@ -139,9 +141,15 @@ const Lobby = () => {
                     <Button
                         color="indianred"
                         textColor="white"
-                        text="Connect to MetaMask"
-                        onClick={undefined}
-                    />
+                        text={metaMaskButtonText}
+                        onClick= {() => {
+                            web3Helpers.connectAsync((res) => {
+                                setMetaMaskButtonText(web3Helpers.getLoginState());
+                            });
+                        }}
+                    >
+                        
+                    </Button>
                     <h3>Token Balance: [tokenBalance]</h3>
                     <h3>Token Backed: [tokenBacked]</h3>
                 </div>

@@ -6,7 +6,6 @@ import Token, { tokenSizes } from '../adventurers/Token';
 import TargetIndicator from './TargetIndicator';
 import useWindowDimensions from '../../hooks/useWindowDimensions';
 import { cardSizes } from '../cards/Card';
-import ConnectButton from '../web3/ConnectButton';
 
 const useGameStyles = createUseStyles({
     container: {
@@ -243,10 +242,6 @@ const Game = () => {
 
     return (
         <div className={classes.container}>
-            <div >
-            
-            <ConnectButton />
-            </div>
             <div className={classes.enemyTokens}>
                 <Token
                     tokenRef={enemyToken1Ref}

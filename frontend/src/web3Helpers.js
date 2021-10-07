@@ -16,13 +16,25 @@ let web3 = {};
 
 
 const helpers = {
-  connectAsync: async () => {
-      provider = await web3Modal.connect();;
+  connectAsync: async (then) => {
+    console.info("Connecting");
+      provider = await web3Modal.connect();
       web3 = new Web3(provider);
-      return { provider, web3 };
+      console.info("Already done");
+      then({ provider, web3 });
   },
   getWeb3: () => web3,
-  getProvider: () => provider
+  getProvider: () => provider,
+  getLoginState: () => {
+    if (provider.selectedAddress == null) {
+        return 'Connect to MetaMask';
+    }
+    else if (provider.selectedAddress != null) {
+        let address = provider.selectedAddress;
+        return 'Connected to ' + address.substring(0, 6) + '...' + address.substring(address.length - 4, address.length);
+    }
+    return '<unknown state>';
+  }
 }
 
 export default helpers
