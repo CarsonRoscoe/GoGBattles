@@ -2,8 +2,10 @@ import React, { useRef, useState } from 'react';
 import { createUseStyles } from 'react-jss';
 import { getTestCards } from '../../test-data/cards';
 import Deck from '../cards/Deck';
-import Token from '../adventurers/Token';
+import Token, { tokenSizes } from '../adventurers/Token';
 import TargetIndicator from './TargetIndicator';
+import useWindowDimensions from '../../hooks/useWindowDimensions';
+import { cardSizes } from '../cards/Card';
 
 const useGameStyles = createUseStyles({
     container: {
@@ -55,9 +57,29 @@ const emptySelection = {
     key: null
 };
 
+const getGameSizes = (width) => {
+    let cardSize;
+    let tokenSize;
+
+    if (width <= 1280) {
+        cardSize = cardSizes.sm;
+        tokenSize = tokenSizes.sm;
+    } else if (width <= 1920) {
+        cardSize = cardSizes.md;
+        tokenSize = tokenSizes.md;
+    } else {
+        cardSize = cardSizes.lg;
+        tokenSize = tokenSizes.lg;
+    }
+
+    return { cardSize, tokenSize };
+};
+
 const Game = () => {
     const classes = useGameStyles();
 
+    // gets current window dimensions - used to scale cards/tokens appropriately
+    const { width } = useWindowDimensions();
     // player's deck
     const [cards, setCards] = useState(getTestCards());
     // player's selection - key is index in deck when selecting card, token name when selecting a token
@@ -114,6 +136,9 @@ const Game = () => {
         enemyToken4: enemyToken4Ref,
         enemyToken5: enemyToken5Ref
     };
+
+    const { cardSize, tokenSize } = getGameSizes(width);
+    console.log('width', width, ' = cardSize', cardSize, ' + tokenSize', tokenSize);
 
     /**
      * Extracts targets from `tokens` and `moveOrder` and prepares them to be rendered as `TargetIndicator`s
@@ -210,7 +235,7 @@ const Game = () => {
             setSelected(emptySelection);
         }
         // if there is no active selection during onTokenClick, then select the token
-        if (selected.type === null) {
+        if (selected.type === null && !tokenKey.startsWith('enemy')) {
             setSelected({ type: selectionTypes.token, key: tokenKey });
         }
     };
@@ -222,26 +247,31 @@ const Game = () => {
                     tokenRef={enemyToken1Ref}
                     hp={30}
                     onClickCallback={() => onTokenClick('enemyToken1')}
+                    size={tokenSize}
                 />
                 <Token
                     tokenRef={enemyToken2Ref}
                     hp={100}
                     onClickCallback={() => onTokenClick('enemyToken2')}
+                    size={tokenSize}
                 />
                 <Token
                     tokenRef={enemyToken3Ref}
                     hp={100}
                     onClickCallback={() => onTokenClick('enemyToken3')}
+                    size={tokenSize}
                 />
                 <Token
                     tokenRef={enemyToken4Ref}
                     hp={80}
                     onClickCallback={() => onTokenClick('enemyToken4')}
+                    size={tokenSize}
                 />
                 <Token
                     tokenRef={enemyToken5Ref}
                     hp={50}
                     onClickCallback={() => onTokenClick('enemyToken5')}
+                    size={tokenSize}
                 />
             </div>
             {/* friendly tokens */}
@@ -253,6 +283,7 @@ const Game = () => {
                     hp={30}
                     cards={tokens.token1.cards}
                     onClickCallback={() => onTokenClick('token1')}
+                    size={tokenSize}
                 />
                 <Token
                     tokenRef={token2Ref}
@@ -261,6 +292,7 @@ const Game = () => {
                     hp={100}
                     cards={tokens.token2.cards}
                     onClickCallback={() => onTokenClick('token2')}
+                    size={tokenSize}
                 />
                 <Token
                     tokenRef={token3Ref}
@@ -269,6 +301,7 @@ const Game = () => {
                     hp={100}
                     cards={tokens.token3.cards}
                     onClickCallback={() => onTokenClick('token3')}
+                    size={tokenSize}
                 />
                 <Token
                     tokenRef={token4Ref}
@@ -277,6 +310,7 @@ const Game = () => {
                     hp={80}
                     cards={tokens.token4.cards}
                     onClickCallback={() => onTokenClick('token4')}
+                    size={tokenSize}
                 />
                 <Token
                     tokenRef={token5Ref}
@@ -285,12 +319,14 @@ const Game = () => {
                     hp={50}
                     cards={tokens.token5.cards}
                     onClickCallback={() => onTokenClick('token5')}
+                    size={tokenSize}
                 />
             </div>
             <div className={classes.deckWrapper}>
                 <Deck
                     selected={Number.isInteger(selected.key) ? selected.key : -1}
                     cards={cards}
+                    cardSize={cardSize}
                     onSelectedCallback={(i) => {
                         setSelected({ type: selectionTypes.card, key: i });
                     }}
