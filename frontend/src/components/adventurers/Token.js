@@ -4,13 +4,29 @@ import { createUseStyles } from 'react-jss';
 import { Shake } from 'reshake';
 import Card, { cardPropTypes, cardSizes } from '../cards/Card';
 
+export const tokenSizes = {
+    sm: 'sm',
+    md: 'md',
+    lg: 'lg'
+};
+
+export const tokenWidths = {
+    [tokenSizes.sm]: 80,
+    [tokenSizes.md]: 100,
+    [tokenSizes.lg]: 140
+};
+
+export const equippedCardSize = {
+    [tokenSizes.sm]: cardSizes.sm,
+    [tokenSizes.md]: cardSizes.sm,
+    [tokenSizes.lg]: cardSizes.md,
+}
+
 const useTokenStyles = createUseStyles({
     cardsContainer: {
-        height: 175,
         position: 'absolute',
         right: -15,
-        top: -25,
-        width: 175
+        top: -25
     },
     cardHover: {
         '&:hover': {
@@ -21,9 +37,7 @@ const useTokenStyles = createUseStyles({
         position: 'absolute'
     },
     container: {
-        height: 175,
-        position: 'relative',
-        width: 175
+        position: 'relative'
     },
     hpBar: {
         backgroundColor: 'black',
@@ -45,39 +59,64 @@ const useTokenStyles = createUseStyles({
         borderRadius: 8,
         display: 'flex',
         flexDirection: 'row',
-        height: 175,
         overflow: 'hidden',
-        position: 'absolute',
-        width: 175
+        position: 'absolute'
     }
 });
 
 /**
  * @param {ref} tokenRef - useRef for this Token
  * @param {boolean} isSelected - If this token is selected render a glowing border
+ * @param {boolean} isAtk - If this token is attacking this turn, then do a small animation
+ * @param {boolean} isHit - If this token is being hit this turn, then do a small animation
  * @param {boolean} disableHover - If the card zIndex hover should be disabled
  * @param {number} hp - Token's hp%
  * @param {object[]} cards - Equipped cards
  * @param stats // @TODO
+ * @param {string} size - The token size
  * @param {function} onClickCallback - Callback function for when the Token is clicked
  * @returns {JSX.Element}
  * @constructor
  */
-const Token = ({ tokenRef, isSelected, disableHover, hp, cards, stats, onClickCallback }) => {
+const Token = ({
+    tokenRef,
+    isSelected,
+    isAtk,
+    isHit,
+    disableHover,
+    hp,
+    cards,
+    stats,
+    size,
+    onClickCallback
+}) => {
     const classes = useTokenStyles();
-    const [isTakingDamageEffectActive, setIsTakingDamageEffectActive] = useState(false);
-    const [isAttackingEffectActive, setIsAttackingEffectActive] = useState(false);
+    const [isTakingDamageEffectActive, setIsTakingDamageEffectActive] = useState(isHit);
+    const [isAttackingEffectActive, setIsAttackingEffectActive] = useState(isAtk);
 
     useEffect(() => {
-        // @TODO trigger isTakingDamageEffectActive or isAttackingEffectActive for 2 seconds when component receives
-        // isHit or isAtk prop
-    }, [/* @TODO isHit, isAtk props */]);
+        if (isTakingDamageEffectActive) {
+            setTimeout(() => {
+                setIsTakingDamageEffectActive(false);
+            }, 1000);
+        }
+
+        if (isAttackingEffectActive) {
+            setTimeout(() => {
+                setIsAttackingEffectActive(false);
+            }, 1000);
+        }
+    }, [isAttackingEffectActive, isTakingDamageEffectActive]);
+
+    const width = tokenWidths[size];
+    const height = tokenWidths[size];
 
     return (
         <div
             ref={tokenRef}
             className={classes.container}
             onClick={onClickCallback}
+            style={{ width, height }}
         >
             <Shake
                 active={isTakingDamageEffectActive || isAttackingEffectActive}
@@ -85,14 +124,17 @@ const Token = ({ tokenRef, isSelected, disableHover, hp, cards, stats, onClickCa
                 v={isAttackingEffectActive ? 100 : 0}
                 r={isAttackingEffectActive ? 0 : 0}
                 dur={1000}
-                int={10}
+                int={isTakingDamageEffectActive ? 10 : 50}
                 max={100}
                 freez={false}
                 fixedStop={false}
                 fixed
             >
                 {cards.length > 0 && (
-                    <div className={classes.cardsContainer}>
+                    <div
+                        className={classes.cardsContainer}
+                        style={{ width, height }}
+                    >
                         {cards.map((card, i) => (
                             <div
                                 key={card.name}
@@ -113,7 +155,7 @@ const Token = ({ tokenRef, isSelected, disableHover, hp, cards, stats, onClickCa
                                     stats={card.stats}
                                     tokenValue={card.tokenValue}
                                     rarityType={card.rarityType}
-                                    size={cardSizes.md}
+                                    size={equippedCardSize[size]}
                                 />
                             </div>
                         ))}
@@ -123,7 +165,9 @@ const Token = ({ tokenRef, isSelected, disableHover, hp, cards, stats, onClickCa
                     className={classes.tokenWrapper}
                     style={{
                         boxShadow: isSelected ? '0 0 20px red' : 'initial',
-                        zIndex: cards.length + 1
+                        zIndex: cards.length + 1,
+                        width,
+                        height
                     }}
                 >
                     <div className={classes.tokenStats}>
@@ -149,18 +193,24 @@ const Token = ({ tokenRef, isSelected, disableHover, hp, cards, stats, onClickCa
 Token.propTypes = {
     tokenRef: PropTypes.shape({ current: PropTypes.instanceOf(Element) }),
     isSelected: PropTypes.bool,
+    isAtk: PropTypes.bool,
+    isHit: PropTypes.bool,
     disableHover: PropTypes.bool,
     hp: PropTypes.number.isRequired,
     cards: PropTypes.arrayOf(PropTypes.shape(cardPropTypes)),
     stats: PropTypes.array,
+    size: PropTypes.oneOf(Object.values(tokenSizes)),
     onClickCallback: PropTypes.func
 };
 
 Token.defaultProps = {
     isSelected: false,
+    isAtk: false,
+    isHit: false,
     disableHover: false,
     cards: [],
     stats: [],
+    size: tokenSizes.md,
     onClickCallback: () => undefined
 };
 
