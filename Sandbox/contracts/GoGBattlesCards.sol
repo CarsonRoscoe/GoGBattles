@@ -1,25 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.2;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155BurnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./GoGBattlesCardFactory.sol";
 
 struct Card {
     uint backedValue;
 }
 
-contract GoGBattlesCards is Initializable, ERC1155Upgradeable, AccessControlUpgradeable, ERC1155BurnableUpgradeable, UUPSUpgradeable {
+contract GoGBattlesCards is ERC1155, AccessControl, ERC1155Burnable {
     bytes32 public constant URI_SETTER_ROLE = keccak256("URI_SETTER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
     bytes32 public constant COORDINATOR_ROLE = keccak256("COORDINATOR_ROLE");
     
-    IERC20Upgradeable _token;
+    IERC20 _token;
     GoGBattlesCardFactory _factory;
     
     mapping(uint => uint) _valueOfCards;
@@ -28,25 +26,16 @@ contract GoGBattlesCards is Initializable, ERC1155Upgradeable, AccessControlUpgr
     uint _nextTokenID;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {}
-
-    function initialize() initializer public {
-        __ERC1155_init("https://guildsofgods.com/cards/");
-        __AccessControl_init();
-        __ERC1155Burnable_init();
-        __UUPSUpgradeable_init();
-
+    constructor() ERC1155("https://guildsofgods.com/cards/") {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(URI_SETTER_ROLE, msg.sender);
         _setupRole(MINTER_ROLE, msg.sender);
         _setupRole(UPGRADER_ROLE, msg.sender);
         _setupRole(COORDINATOR_ROLE, msg.sender);
     }
-    
-    function setGoGBattlesToken(address gogBattlesToken) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        _token = IERC20Upgradeable(gogBattlesToken);
-    }
-    function setGoGBattlesCardFactory(address gogBattlesCardFactory) public onlyRole(DEFAULT_ADMIN_ROLE) {
+
+    function setGoGBattlesTokenAndCardFactory(address gogBattlesToken, address gogBattlesCardFactory) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _token = IERC20(gogBattlesToken);
         _factory = GoGBattlesCardFactory(gogBattlesCardFactory);
     }
 
@@ -84,8 +73,6 @@ contract GoGBattlesCards is Initializable, ERC1155Upgradeable, AccessControlUpgr
         return (tokenIds, tokensRemaining);
     }
 
-    function _authorizeUpgrade(address newImplementation) internal onlyRole(UPGRADER_ROLE) override {}
-    
     function burnBatch(address owner, uint256[] memory ids, uint256[] memory amounts) public override onlyRole(COORDINATOR_ROLE) {
         super.burnBatch(owner, ids, amounts);
     }
@@ -100,7 +87,7 @@ contract GoGBattlesCards is Initializable, ERC1155Upgradeable, AccessControlUpgr
 
     // The following functions are overrides required by Solidity.
 
-    function supportsInterface(bytes4 interfaceId) public view override(ERC1155Upgradeable, AccessControlUpgradeable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view override(ERC1155, AccessControl) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
     

@@ -40,9 +40,7 @@ const Deck = ({ selected, cards, cardSize, onSelectedCallback }) => {
             onScroll={onScroll}
             style={{
                 height:
-                    cardWidths[cardSize] *
-                        cardHeightMultiplier[cardSize] +
-                    50
+                    cardWidths[cardSize] * cardHeightMultiplier[cardSize] + 50
             }}
         >
             {cards.map((card, i) => (

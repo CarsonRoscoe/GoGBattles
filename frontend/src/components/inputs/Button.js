@@ -20,7 +20,7 @@ const useButtonStyles = createUseStyles({
     text: {
         fontSize: 18
     }
-})
+});
 
 const Button = ({ text, color, textColor, onClick }) => {
     const classes = useButtonStyles();
@@ -31,10 +31,7 @@ const Button = ({ text, color, textColor, onClick }) => {
             style={{ backgroundColor: color }}
             onClick={onClick}
         >
-            <span
-                className={classes.text}
-                style={{ color: textColor }}
-            >
+            <span className={classes.text} style={{ color: textColor }}>
                 {text}
             </span>
         </button>

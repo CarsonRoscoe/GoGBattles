@@ -176,7 +176,7 @@ const Stats = ({ offense, defensive, height }) => {
                 <img
                     src={`card-icons/${stat}.png`}
                     alt={stat}
-                    height={height * .3}
+                    height={height * 0.3}
                     width="auto"
                 />
             </td>
@@ -184,10 +184,7 @@ const Stats = ({ offense, defensive, height }) => {
                 className={classes.td}
                 style={{ width: cellWidth, paddingRight: cellPadding }}
             >
-                <Textfit
-                    mode="single"
-                    max={20}
-                >
+                <Textfit mode="single" max={20}>
                     {value}
                 </Textfit>
             </td>
@@ -254,18 +251,10 @@ const Bottom = ({ equipmentClass, equipmentType, tokenValue, height }) => {
 
     return (
         <div className={classes.container}>
-            <Textfit
-                mode="single"
-                max={17}
-                className={classes.equipment}
-            >
+            <Textfit mode="single" max={17} className={classes.equipment}>
                 {equipmentClass} ({equipmentType})
             </Textfit>
-            <Textfit
-                mode="single"
-                max={14}
-                className={classes.token}
-            >
+            <Textfit mode="single" max={14} className={classes.token}>
                 {tokenValue}
             </Textfit>
         </div>

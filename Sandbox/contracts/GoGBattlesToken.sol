@@ -7,28 +7,25 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 
 contract GoGBattlesToken is ERC20, ERC20Permit, ERC20Burnable, AccessControl {
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
-    bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
+    bytes32 public constant COORDINATOR_ROLE = keccak256("COORDINATOR_ROLE");
 
     constructor() ERC20("GoGBattleToken", "GAME") ERC20Permit("GoGBattleToken") {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _setupRole(MINTER_ROLE, msg.sender);
-        _setupRole(UPGRADER_ROLE, msg.sender);
+        _setupRole(COORDINATOR_ROLE, msg.sender);
     }
     
-    function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
+    function mint(address to, uint256 amount) public onlyRole(COORDINATOR_ROLE) {
         _mint(to, amount);
     }
     
-    function mintBatch(address[] memory to, uint256[] memory amounts) public onlyRole(MINTER_ROLE) {
+    function mintBatch(address[] memory to, uint256[] memory amounts) public onlyRole(COORDINATOR_ROLE) {
         require(to.length == amounts.length, "To and Amounts arrays must be equivalent size");
         for(uint i = 0; i < to.length; ++i) {
             _mint(to[i], amounts[i]);
         }
     }
     
-    function burn(address account, uint256 amount) public onlyRole(BURNER_ROLE) {
+    function burn(address account, uint256 amount) public onlyRole(COORDINATOR_ROLE) {
         _burn(account, amount);
     }
 

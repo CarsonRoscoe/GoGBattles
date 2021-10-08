@@ -138,7 +138,14 @@ const Game = () => {
     };
 
     const { cardSize, tokenSize } = getGameSizes(width);
-    console.log('width', width, ' = cardSize', cardSize, ' + tokenSize', tokenSize);
+    console.log(
+        'width',
+        width,
+        ' = cardSize',
+        cardSize,
+        ' + tokenSize',
+        tokenSize
+    );
 
     /**
      * Extracts targets from `tokens` and `moveOrder` and prepares them to be rendered as `TargetIndicator`s
@@ -195,7 +202,11 @@ const Game = () => {
         const { type, key } = selected;
 
         // only allow targeting of enemy adventurers until support/heal is added
-        if (type === selectionTypes.token && key && tokenKeyToTarget.startsWith('enemy')) {
+        if (
+            type === selectionTypes.token &&
+            key &&
+            tokenKeyToTarget.startsWith('enemy')
+        ) {
             const tokensCopy = {
                 ...tokens,
                 [key]: {
@@ -231,7 +242,10 @@ const Game = () => {
             setTarget(tokenKey);
         }
         // if token being clicked is already selected, clear the selection
-        if (selected.type === selectionTypes.token && selected.key === tokenKey) {
+        if (
+            selected.type === selectionTypes.token &&
+            selected.key === tokenKey
+        ) {
             setSelected(emptySelection);
         }
         // if there is no active selection during onTokenClick, then select the token
@@ -324,7 +338,9 @@ const Game = () => {
             </div>
             <div className={classes.deckWrapper}>
                 <Deck
-                    selected={Number.isInteger(selected.key) ? selected.key : -1}
+                    selected={
+                        Number.isInteger(selected.key) ? selected.key : -1
+                    }
                     cards={cards}
                     cardSize={cardSize}
                     onSelectedCallback={(i) => {

@@ -13,16 +13,16 @@
     rarityTier="UNCOMMON"
  */
 
-import cards from "./cards.json";
+import cards from './cards.json';
 
 const toolName = {
-    COPPER_HELMET : 'Copper Helmet',
-}
+    COPPER_HELMET: 'Copper Helmet'
+};
 
 export const getTestCards = () => {
     let testCards = [];
-    
-const rarityTiers = [
+
+    const rarityTiers = [
         'COMMON',
         'UNCOMMON',
         'RARE',
@@ -37,7 +37,7 @@ const rarityTiers = [
     const getRandomElement = (array) =>
         cards[Math.floor(Math.random() * cards.length)];
 
-    for(let i = 0; i < 20; ++i) {
+    for (let i = 0; i < 20; ++i) {
         const card = getRandomElement(classes);
 
         let type = card.name;

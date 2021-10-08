@@ -91,10 +91,14 @@ const Lobby = () => {
 
     const cards = testCards; // @TODO fetch from account
     const [selectedCardIndex, setSelectedCardIndex] = useState(-1);
-    const [metaMaskButtonText, setMetaMaskButtonText] = useState(web3Helpers.getLoginState());
+    const [metaMaskButtonText, setMetaMaskButtonText] = useState(
+        web3Helpers.getLoginState()
+    );
     const [modal, setModal] = useState(<Button></Button>);
     const [modalIsOpen, setIsOpen] = React.useState(false);
-    const [modalContent, setModalContent] = React.useState(<div>I am a modal</div>);
+    const [modalContent, setModalContent] = React.useState(
+        <div>I am a modal</div>
+    );
     const [modalStyle, setModalStyle] = React.useState(<div>I am a modal</div>);
 
     function openModal() {
@@ -127,15 +131,22 @@ const Lobby = () => {
                                 {...cards[selectedCardIndex]}
                             />
                             <div className={classes.selectedCardOptions}>
-                                <h3 className={classes.selectedCardOptionsHeader}>
-                                    Backed Value: {cards[selectedCardIndex].GOGTokenValue}
+                                <h3
+                                    className={
+                                        classes.selectedCardOptionsHeader
+                                    }
+                                >
+                                    Backed Value:{' '}
+                                    {cards[selectedCardIndex].GOGTokenValue}
                                 </h3>
                                 <Button
                                     color="cadetblue"
                                     textColor="white"
                                     text="Send to User"
                                     onClick={() => {
-                                        setModalContent(Modals.transfer.content);
+                                        setModalContent(
+                                            Modals.transfer.content
+                                        );
                                         setModalStyle(Modals.transfer.style);
                                         openModal();
                                     }}
@@ -145,9 +156,13 @@ const Lobby = () => {
                                     textColor="white"
                                     text="Burn for Token"
                                     onClick={() => {
-                                        web3Helpers.cards.burnForToken((res) => {
-                                            setMetaMaskButtonText(web3Helpers.getLoginState());
-                                        });
+                                        web3Helpers.cards.burnForToken(
+                                            (res) => {
+                                                setMetaMaskButtonText(
+                                                    web3Helpers.getLoginState()
+                                                );
+                                            }
+                                        );
                                     }}
                                 />
                                 <Button
@@ -155,9 +170,13 @@ const Lobby = () => {
                                     textColor="white"
                                     text="Burn for Stablecoins"
                                     onClick={() => {
-                                        web3Helpers.cards.burnForStablecoins((res) => {
-                                            setMetaMaskButtonText(web3Helpers.getLoginState());
-                                        });
+                                        web3Helpers.cards.burnForStablecoins(
+                                            (res) => {
+                                                setMetaMaskButtonText(
+                                                    web3Helpers.getLoginState()
+                                                );
+                                            }
+                                        );
                                     }}
                                 />
                             </div>
@@ -169,14 +188,14 @@ const Lobby = () => {
                         color="indianred"
                         textColor="white"
                         text={metaMaskButtonText}
-                        onClick= {() => {
+                        onClick={() => {
                             web3Helpers.connectAsync((res) => {
-                                setMetaMaskButtonText(web3Helpers.getLoginState());
+                                setMetaMaskButtonText(
+                                    web3Helpers.getLoginState()
+                                );
                             });
                         }}
-                    >
-                        
-                    </Button>
+                    ></Button>
                     <h3>Token Balance: [tokenBalance]</h3>
                     <h3>Token Backed: [tokenBacked]</h3>
                 </div>
@@ -198,8 +217,7 @@ const Lobby = () => {
                 {modalContent}
             </Modal>
         </div>
-    )
-
+    );
 };
 
 export default Lobby;

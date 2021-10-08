@@ -6,14 +6,14 @@
 
 pragma solidity >=0.7.0 <0.9.0;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./GoGBattlesToken.sol";
 import "./GoGBattlesCards.sol";
 import "./GoGBattlesVault.sol";
 import "./GoGBattlesMatchHistory.sol";
 
-contract GoGBattlesCoordinator is AccessControlUpgradeable {
+contract GoGBattlesCoordinator is AccessControl {
     bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
     bytes32 public constant REFEREE_ROLE = keccak256("REFEREE_ROLE");
     
@@ -32,8 +32,6 @@ contract GoGBattlesCoordinator is AccessControlUpgradeable {
     GoGBattlesMatchHistory matchHistory;
     
     constructor() {
-        __AccessControl_init();
-        
         _devTokenFund = 0;
 
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -54,19 +52,13 @@ contract GoGBattlesCoordinator is AccessControlUpgradeable {
         _;
     }
     
-    function SetGoGBattlesToken(address tokenAddress) public onlyRole(OWNER_ROLE) {
+    function SetGoGBattlesContracts(address tokenAddress, address cardsAddress, address vaultAddress, address matchHistoryAddress) public onlyRole(OWNER_ROLE) {
         token = GoGBattlesToken(tokenAddress);
         require(address(token) != address(0), "Token address must be set.");
-    }
-    function SetGoGBattlesCards(address cardsAddress) public onlyRole(OWNER_ROLE) {
         cards = GoGBattlesCards(cardsAddress);
         require(address(cards) != address(0), "Cards address must be set.");
-    }
-    function SetGoGBattlesVault(address vaultAddress) public onlyRole(OWNER_ROLE) {
         vault = GoGBattlesVault(vaultAddress);
         require(address(vault) != address(0), "Vault address must be set.");
-    }
-    function SetGoGBattlesMatchHistory(address matchHistoryAddress) public onlyRole(OWNER_ROLE) {
         matchHistory = GoGBattlesMatchHistory(matchHistoryAddress);
         require(address(matchHistoryAddress) != address(0), "Match history address must be set.");
     }
@@ -94,7 +86,7 @@ contract GoGBattlesCoordinator is AccessControlUpgradeable {
     
     // Deposit into a vault and mint cards
     function mintCards(address vaultType, uint256 amount) public ensureUserRegistered() returns(uint256[] memory) {
-        IERC20Upgradeable erc20 = IERC20Upgradeable(vaultType);
+        IERC20 erc20 = IERC20(vaultType);
         require(address(erc20) != address(0), "Passed in vaultType must be a valid ERC20.");
         _depositStablecoinSafe(erc20, amount, msg.sender, address(this));
         uint256[] memory cardIds = _mintCardsSafe(amount, msg.sender);
@@ -175,7 +167,7 @@ contract GoGBattlesCoordinator is AccessControlUpgradeable {
     }
     
     // Core private functions
-    function _depositStablecoinSafe(IERC20Upgradeable erc20, uint256 amount, address ercDepositer, address tokenReceiver ) private {
+    function _depositStablecoinSafe(IERC20 erc20, uint256 amount, address ercDepositer, address tokenReceiver ) private {
         // Take deposit
         require(erc20.allowance(ercDepositer, address(this)) > amount, "Contract must be first allowed to transfer.");
         require(erc20.transferFrom(ercDepositer, address(this), amount), "Transfer to contract must succeed.");

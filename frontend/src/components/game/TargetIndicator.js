@@ -26,11 +26,7 @@ const useOrderBubbleStyles = createUseStyles({
 const OrderBubble = ({ order }) => {
     const classes = useOrderBubbleStyles();
 
-    return (
-        <div className={classes.container}>
-            {order}
-        </div>
-    );
+    return <div className={classes.container}>{order}</div>;
 };
 
 OrderBubble.propTypes = {

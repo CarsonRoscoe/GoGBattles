@@ -19,8 +19,8 @@ export const tokenWidths = {
 export const equippedCardSize = {
     [tokenSizes.sm]: cardSizes.sm,
     [tokenSizes.md]: cardSizes.sm,
-    [tokenSizes.lg]: cardSizes.md,
-}
+    [tokenSizes.lg]: cardSizes.md
+};
 
 const useTokenStyles = createUseStyles({
     cardsContainer: {
@@ -91,8 +91,10 @@ const Token = ({
     onClickCallback
 }) => {
     const classes = useTokenStyles();
-    const [isTakingDamageEffectActive, setIsTakingDamageEffectActive] = useState(isHit);
-    const [isAttackingEffectActive, setIsAttackingEffectActive] = useState(isAtk);
+    const [isTakingDamageEffectActive, setIsTakingDamageEffectActive] =
+        useState(isHit);
+    const [isAttackingEffectActive, setIsAttackingEffectActive] =
+        useState(isAtk);
 
     useEffect(() => {
         if (isTakingDamageEffectActive) {
@@ -138,7 +140,9 @@ const Token = ({
                         {cards.map((card, i) => (
                             <div
                                 key={card.name}
-                                className={`${classes.cardWrapper} ${disableHover ? '' : classes.cardHover}`}
+                                className={`${classes.cardWrapper} ${
+                                    disableHover ? '' : classes.cardHover
+                                }`}
                                 style={{
                                     top: 25 * (i + 1),
                                     right: 15 * (i + 1),
