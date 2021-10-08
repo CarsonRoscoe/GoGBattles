@@ -23,11 +23,12 @@ contract GoGBattlesCards is Initializable, ERC1155Upgradeable, AccessControlUpgr
     GoGBattlesCardFactory _factory;
     
     mapping(uint => uint) _valueOfCards;
+    mapping(uint => uint) _timelockOnCards;
     mapping(address => uint) _valueOfAccount;
     uint _nextTokenID;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() initializer {}
+    constructor() {}
 
     function initialize() initializer public {
         __ERC1155_init("https://guildsofgods.com/cards/");
@@ -116,6 +117,20 @@ contract GoGBattlesCards is Initializable, ERC1155Upgradeable, AccessControlUpgr
     }
     
     function _beforeTokenTransfer( address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data ) internal override virtual {
+        // mint case
+        if (from == address(0)) {
+            for(uint i = 0; i < ids.length; ++i) {
+                _timelockOnCards[ids[i]] = block.timestamp;
+            }
+        }
+        
+        // burn case
+        if (to == address(0)) {
+            for(uint i = 0; i < ids.length; ++i) {
+                require(_timelockOnCards[ids[i]] < block.timestamp, "You cannot burn a card too soon after minting.");
+            }
+        }
+        
         uint valueOfCards = 0;
         for(uint i = 0; i < ids.length; ++i) {
             valueOfCards += _valueOfCards[ids[i]];

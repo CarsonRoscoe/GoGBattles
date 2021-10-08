@@ -21,6 +21,7 @@ contract GoGBattlesCoordinator is AccessControlUpgradeable {
     event BurnCards(address burner, uint[] tokenIds);
     
     uint _devTokenFund;
+    uint _usersTokenFund;
     
     mapping(address => uint256) _userByIds;
     address[] _users;
@@ -53,19 +54,19 @@ contract GoGBattlesCoordinator is AccessControlUpgradeable {
         _;
     }
     
-    function SetGoGBattlesToken(address tokenAddress) public onlyRole("OWNER_ROLE") {
+    function SetGoGBattlesToken(address tokenAddress) public onlyRole(OWNER_ROLE) {
         token = GoGBattlesToken(tokenAddress);
         require(address(token) != address(0), "Token address must be set.");
     }
-    function SetGoGBattlesCards(address cardsAddress) public onlyRole("OWNER_ROLE") {
+    function SetGoGBattlesCards(address cardsAddress) public onlyRole(OWNER_ROLE) {
         cards = GoGBattlesCards(cardsAddress);
         require(address(cards) != address(0), "Cards address must be set.");
     }
-    function SetGoGBattlesVault(address vaultAddress) public onlyRole("OWNER_ROLE") {
+    function SetGoGBattlesVault(address vaultAddress) public onlyRole(OWNER_ROLE) {
         vault = GoGBattlesVault(vaultAddress);
         require(address(vault) != address(0), "Vault address must be set.");
     }
-    function SetGoGBattlesMatchHistory(address matchHistoryAddress) public onlyRole("OWNER_ROLE") {
+    function SetGoGBattlesMatchHistory(address matchHistoryAddress) public onlyRole(OWNER_ROLE) {
         matchHistory = GoGBattlesMatchHistory(matchHistoryAddress);
         require(address(matchHistoryAddress) != address(0), "Match history address must be set.");
     }
@@ -116,9 +117,17 @@ contract GoGBattlesCoordinator is AccessControlUpgradeable {
         // returns interest
     }
     
+    function claim() public ensureUserRegistered() {
+        uint userFundSupply = _usersTokenFund; 
+        uint totalSupply = token.totalSupply();
+        uint userSupply = token.balanceOf(msg.sender) + cards.backingBalanceOf(msg.sender);
+        
+        
+    }
+    
     function distributeInterest() public ensureUserRegistered() {
         // Require there is at least $0.01 in the pool
-        uint256 amount = vault.accruePendingInterest();
+        uint256 amount = vault.accruePendingInterest(); // 100, 110: 110
         require(amount > 20, "There must be enough interest to collect that all parties get a share");
         
         uint256 amountToPool = amount * 70 / 100; // 70% of interest goes into the reward pool
@@ -132,34 +141,37 @@ contract GoGBattlesCoordinator is AccessControlUpgradeable {
         
         token.mint(address(vault), amountToPool);
         _devTokenFund += amountToDevs; // Allow devs to mint tokens
+        _usersTokenFund += amountToUsers; // Allows users to claim interest
         
-        uint tokenSupply = token.totalSupply();
-        address[] memory users;
-        uint256[] memory amountsToMint;
-        uint amountGettingMinted;
-        for(uint i = 0; i < _users.length; ++i) {
-            address userAddress = _users[i];
+        // uint tokenSupply = token.totalSupply();
+        // address[] memory users;
+        // uint256[] memory amountsToMint;
+        // uint amountGettingMinted;
+        // for(uint i = 0; i < _users.length; ++i) {
+        //     address userAddress = _users[i];
             
-            uint tokenBalance = token.balanceOf(userAddress);
-            uint cardsTokenBalance = cards.backingBalanceOf(userAddress);
-            uint userAmount = tokenBalance + cardsTokenBalance;
+        //     uint tokenBalance = token.balanceOf(userAddress);
+        //     uint cardsTokenBalance = cards.backingBalanceOf(userAddress);
+        //     uint userAmount = tokenBalance + cardsTokenBalance;
             
-            if (userAmount > 0) {
-                // !!! review
-                uint amountToMint = userAmount * amountToDevs / tokenSupply; 
-                if (amountToMint > 0) {
-                    amountGettingMinted += amountToMint;
-                    amountsToMint[i] = amountToMint;
-                    users[i] = userAddress;
-                }
-            }
-        }
+        //     if (userAmount > 0) {
+        //         // !!! review
+        //         // 100, 1000, 10% * amountToUsers
+        //         uint amountToMint = userAmount * amountToDevs / tokenSupply; 
+        //         if (amountToMint > 0) {
+        //             amountGettingMinted += amountToMint;
+        //             amountsToMint[i] = amountToMint;
+        //             users[i] = userAddress;
+                    
+        //         }
+        //     }
+        // }
         
-        if (amountGettingMinted < amountToUsers) {
-            _devTokenFund += amountToUsers - amountGettingMinted;
-        }
+        // if (amountGettingMinted < amountToUsers) {
+        //     _devTokenFund += amountToUsers - amountGettingMinted;
+        // }
         
-        token.mintBatch(users, amountsToMint);
+        // token.mintBatch(users, amountsToMint);
     }
     
     // Core private functions
@@ -171,7 +183,7 @@ contract GoGBattlesCoordinator is AccessControlUpgradeable {
         // Transfer deposit to vault and receive tokens
         require(vault.doesVaultTypeExist(address(erc20)), "No vaults exist for token type");
         require(erc20.approve(address(vault), amount), "Must approve vault for token deposit.");
-        require(vault.deposit(msg.sender, amount, address(erc20)), "Vault deposit must succeed.");
+        require(vault.depositUnnormalizedDecimals(ercDepositer, amount, address(erc20)), "Vault deposit must succeed.");
         
         // Mint token
         token.mint(tokenReceiver, amount);
@@ -209,7 +221,7 @@ contract GoGBattlesCoordinator is AccessControlUpgradeable {
         token.burn(amount);
         
         require(vault.doesVaultTypeExist(erc20), "ERC20 is not a supported vault type.");
-        require(vault.balanceOfVault(address(erc20)) > amount, "Vault must be liquid");
-        require(vault.withdraw(user, amount, erc20), "Vault must withdraw desired token to user.");
+        require(vault.balanceOfVaultNormalizedDecimals(address(erc20)) > amount, "Vault must be liquid");
+        require(vault.withdrawNormalizedDecimals(user, amount, erc20), "Vault must withdraw desired token to user.");
     }
 }

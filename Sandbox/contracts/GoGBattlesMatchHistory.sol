@@ -1,3 +1,7 @@
+/**
+ *Submitted for verification at polygonscan.com on 2021-09-27
+*/
+
 // SPDX-License-Identifier: GPL-3.0
 
 pragma solidity >=0.7.0 <0.9.0;
@@ -13,13 +17,14 @@ contract GoGBattlesMatchHistory is AccessControlUpgradeable {
     
     event Match(uint256 matchID, address winner, address loser, uint256 timestamp, string ipfs);
     
+    address _coordinator;
     uint256 _nextMatchID;
     
     mapping(string => uint256) matchIDLookup;
     mapping(uint256 => string) ipfsLookup;
     
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() initializer {}
+    constructor() {}
 
     function initialize() initializer public {
         __AccessControl_init();

@@ -22,9 +22,11 @@ contract GoGBattlesToken is Initializable, ERC20Upgradeable, ERC20BurnableUpgrad
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
+    
+    
 
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() initializer {}
+    constructor() {}
 
     function initialize() initializer public {
         __ERC20_init("GoGBattleToken", "GAME");
