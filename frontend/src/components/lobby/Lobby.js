@@ -7,6 +7,9 @@ import Button from '../inputs/Button';
 import useWindowDimensions from '../../hooks/useWindowDimensions';
 import { cardSizes } from '../cards/Card';
 import web3Helpers from '../../web3Helpers';
+import Modals from './Modals';
+
+import Modal from '@mui/material/Modal';
 
 const useLobbyStyles = createUseStyles({
     container: {
@@ -89,6 +92,18 @@ const Lobby = () => {
     const cards = testCards; // @TODO fetch from account
     const [selectedCardIndex, setSelectedCardIndex] = useState(-1);
     const [metaMaskButtonText, setMetaMaskButtonText] = useState(web3Helpers.getLoginState());
+    const [modal, setModal] = useState(<Button></Button>);
+    const [modalIsOpen, setIsOpen] = React.useState(false);
+    const [modalContent, setModalContent] = React.useState(<div>I am a modal</div>);
+    const [modalStyle, setModalStyle] = React.useState(<div>I am a modal</div>);
+
+    function openModal() {
+        setIsOpen(true);
+    }
+
+    function closeModal() {
+        setIsOpen(false);
+    }
 
     const { cardSize } = getLobbySizes(width);
 
@@ -119,19 +134,31 @@ const Lobby = () => {
                                     color="cadetblue"
                                     textColor="white"
                                     text="Send to User"
-                                    onClick={undefined}
+                                    onClick={() => {
+                                        setModalContent(Modals.transfer.content);
+                                        setModalStyle(Modals.transfer.style);
+                                        openModal();
+                                    }}
                                 />
                                 <Button
                                     color="cadetblue"
                                     textColor="white"
                                     text="Burn for Token"
-                                    onClick={undefined}
+                                    onClick={() => {
+                                        web3Helpers.cards.burnForToken((res) => {
+                                            setMetaMaskButtonText(web3Helpers.getLoginState());
+                                        });
+                                    }}
                                 />
                                 <Button
                                     color="cadetblue"
                                     textColor="white"
-                                    text="Burn for Money"
-                                    onClick={undefined}
+                                    text="Burn for Stablecoins"
+                                    onClick={() => {
+                                        web3Helpers.cards.burnForStablecoins((res) => {
+                                            setMetaMaskButtonText(web3Helpers.getLoginState());
+                                        });
+                                    }}
                                 />
                             </div>
                         </>
@@ -162,6 +189,14 @@ const Lobby = () => {
                     onSelectedCallback={(i) => setSelectedCardIndex(i)}
                 />
             </div>
+            <Modal
+                open={modalIsOpen}
+                onClose={closeModal}
+                aria-labelledby="modal-modal-title"
+                aria-describedby="modal-modal-description"
+            >
+                {modalContent}
+            </Modal>
         </div>
     )
 

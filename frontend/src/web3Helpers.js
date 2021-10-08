@@ -14,6 +14,24 @@ const web3Modal = new Web3Modal({
 let provider = {};
 let web3 = {};
 
+const token = {
+  methods : {
+    transfer : (to, amount) => {
+      console.info("transfer ", to, amount);
+    }
+  }
+};
+
+const cards = {
+  burnForToken : (callback) => {
+    window.alert("Open modal");
+    return callback("burnForToken payload");
+  },
+  burnForStablecoins : (callback) => {
+    window.alert("Open modal");
+    return callback("burnForMoney payload");
+  },
+}
 
 const helpers = {
   connectAsync: async (then) => {
@@ -34,7 +52,9 @@ const helpers = {
         return 'Connected to ' + address.substring(0, 6) + '...' + address.substring(address.length - 4, address.length);
     }
     return '<unknown state>';
-  }
+  },
+  token,
+  cards
 }
 
 export default helpers
