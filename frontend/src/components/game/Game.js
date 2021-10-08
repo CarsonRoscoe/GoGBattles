@@ -1,13 +1,24 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useState, useReducer, useRef } from 'react';
 import { createUseStyles } from 'react-jss';
-import { getTestCards } from '../../test-data/cards';
-import Deck from '../cards/Deck';
-import Token, { tokenSizes } from '../adventurers/Token';
-import TargetIndicator from './TargetIndicator';
+// reducers
+import { adventurersReducer, adventurersInitialState, adventurerActionTypes } from '../../reducers/adventurersReducer';
+// hooks
 import useWindowDimensions from '../../hooks/useWindowDimensions';
+// components
+import Deck from '../cards/Deck';
+import Adventurer, { adventurerSizes } from '../adventurers/Adventurer';
+import TargetIndicator from './TargetIndicator';
+import Button from '../inputs/Button';
 import { cardSizes } from '../cards/Card';
+// test-data
+import { getTestCards } from '../../test-data/cards';
 
 const useGameStyles = createUseStyles({
+    buttonWrapper: {
+        display: 'flex',
+        flexDirection: 'row',
+        marginTop: 10
+    },
     container: {
         alignItems: 'center',
         backgroundColor: 'sandybrown',
@@ -21,11 +32,12 @@ const useGameStyles = createUseStyles({
         backgroundColor: 'lightgrey',
         display: 'flex',
         flex: 1,
+        flexDirection: 'column',
         justifyContent: 'center',
-        maxWidth: '80%',
-        minWidth: '80%'
+        maxWidth: '100%',
+        minWidth: '100%'
     },
-    enemyTokens: {
+    enemyAdventurers: {
         alignItems: 'center',
         backgroundColor: 'rosybrown',
         display: 'flex',
@@ -35,7 +47,7 @@ const useGameStyles = createUseStyles({
         maxHeight: '25%',
         minWidth: '80%'
     },
-    friendlyTokens: {
+    friendlyAdventurers: {
         alignItems: 'center',
         backgroundColor: 'palegreen',
         display: 'flex',
@@ -48,7 +60,7 @@ const useGameStyles = createUseStyles({
 });
 
 const selectionTypes = {
-    token: 'token',
+    adventurer: 'adventurer',
     card: 'card'
 };
 
@@ -59,96 +71,72 @@ const emptySelection = {
 
 const getGameSizes = (width) => {
     let cardSize;
-    let tokenSize;
+    let adventurerSize;
 
     if (width <= 1280) {
         cardSize = cardSizes.sm;
-        tokenSize = tokenSizes.sm;
+        adventurerSize = adventurerSizes.sm;
     } else if (width <= 1920) {
         cardSize = cardSizes.md;
-        tokenSize = tokenSizes.md;
+        adventurerSize = adventurerSizes.md;
     } else {
         cardSize = cardSizes.lg;
-        tokenSize = tokenSizes.lg;
+        adventurerSize = adventurerSizes.lg;
     }
 
-    return { cardSize, tokenSize };
+    return { cardSize, adventurerSize };
 };
 
 const Game = () => {
     const classes = useGameStyles();
 
-    // gets current window dimensions - used to scale cards/tokens appropriately
+    // gets current window dimensions - used to scale cards/adventurers appropriately
     const { width } = useWindowDimensions();
     // player's deck
     const [cards, setCards] = useState(getTestCards());
-    // player's selection - key is index in deck when selecting card, token name when selecting a token
+    // player's selection - key is index in deck when selecting card, adventurer name when selecting a adventurer
     const [selected, setSelected] = useState(emptySelection);
     // attack order
     const [moveOrder, setMoveOrder] = useState([]);
     // adventurer state
-    const [tokens, setTokens] = useState({
-        token1: {
-            target: null, // target to attack/support
-            cards: [] // equipped cards
-        },
-        token2: {
-            target: null,
-            cards: []
-        },
-        token3: {
-            target: null,
-            cards: []
-        },
-        token4: {
-            target: null,
-            cards: []
-        },
-        token5: {
-            target: null,
-            cards: []
-        }
-    });
-
-    console.log('selected', selected);
+    const [adventurerState, adventurerDispatch] = useReducer(adventurersReducer, adventurersInitialState);
 
     // refs @TODO try and clean up refs
-    const token1Ref = useRef(null);
-    const token2Ref = useRef(null);
-    const token3Ref = useRef(null);
-    const token4Ref = useRef(null);
-    const token5Ref = useRef(null);
-    const enemyToken1Ref = useRef(null);
-    const enemyToken2Ref = useRef(null);
-    const enemyToken3Ref = useRef(null);
-    const enemyToken4Ref = useRef(null);
-    const enemyToken5Ref = useRef(null);
+    const adventurer1Ref = useRef(null);
+    const adventurer2Ref = useRef(null);
+    const adventurer3Ref = useRef(null);
+    const adventurer4Ref = useRef(null);
+    const adventurer5Ref = useRef(null);
+    const enemyAdventurer1Ref = useRef(null);
+    const enemyAdventurer2Ref = useRef(null);
+    const enemyAdventurer3Ref = useRef(null);
+    const enemyAdventurer4Ref = useRef(null);
+    const enemyAdventurer5Ref = useRef(null);
 
     const refMap = {
-        token1: token1Ref,
-        token2: token2Ref,
-        token3: token3Ref,
-        token4: token4Ref,
-        token5: token5Ref,
-        enemyToken1: enemyToken1Ref,
-        enemyToken2: enemyToken2Ref,
-        enemyToken3: enemyToken3Ref,
-        enemyToken4: enemyToken4Ref,
-        enemyToken5: enemyToken5Ref
+        adventurer1: adventurer1Ref,
+        adventurer2: adventurer2Ref,
+        adventurer3: adventurer3Ref,
+        adventurer4: adventurer4Ref,
+        adventurer5: adventurer5Ref,
+        enemyAdventurer1: enemyAdventurer1Ref,
+        enemyAdventurer2: enemyAdventurer2Ref,
+        enemyAdventurer3: enemyAdventurer3Ref,
+        enemyAdventurer4: enemyAdventurer4Ref,
+        enemyAdventurer5: enemyAdventurer5Ref
     };
 
-    const { cardSize, tokenSize } = getGameSizes(width);
-    console.log('width', width, ' = cardSize', cardSize, ' + tokenSize', tokenSize);
+    const { cardSize, adventurerSize } = getGameSizes(width);
 
     /**
-     * Extracts targets from `tokens` and `moveOrder` and prepares them to be rendered as `TargetIndicator`s
+     * Extracts targets from `adventurers` and `moveOrder` and prepares them to be rendered as `TargetIndicator`s
      * @returns {*[]}
      */
     const getTargets = () => {
         let targets = [];
 
-        Object.entries(tokens).forEach(([key, value]) => {
-            if (value.target !== null) {
+        Object.entries(adventurerState).forEach(([key, value]) => {
+            if (!key.startsWith('enemy') && value.target !== null) {
                 const isEnemy = value.target.startsWith('enemy');
                 const startRef = refMap[key];
                 const endRef = refMap[value.target];
@@ -163,47 +151,65 @@ const Game = () => {
 
     /**
      * Attempt to attach the selected card from state to the adventurer.
-     * @param {string} tokenKey - Adventurer key to equip card
+     * @param {string} adventurerKey - Adventurer key to equip card
      */
-    const equipCard = (tokenKey) => {
+    const equipCard = (adventurerKey) => {
         if (selected.type === selectionTypes.card && selected.key > -1) {
             // remove card from deck
             const card = cards[selected.key];
             const cardsCopy = [...cards];
             cardsCopy.splice(selected.key, 1);
 
-            // equip card to token
-            const tokensCopy = {
-                ...tokens,
-                [tokenKey]: {
-                    ...tokens[tokenKey],
-                    cards: [...tokens[tokenKey].cards, card]
-                }
-            };
+            // if card is equipped in slot put it back in deck
+            const cardToUnequip = adventurerState[adventurerKey].cards[card.equipmentType];
+            if (cardToUnequip) {
+                cardsCopy.push(cardToUnequip);
+            }
 
-            setTokens(tokensCopy);
+            adventurerDispatch({
+                type: adventurerActionTypes.equip,
+                slot: card.equipmentType,
+                adventurerKey,
+                card
+            });
+
             setCards(cardsCopy);
             setSelected(emptySelection);
         }
     };
 
     /**
-     * Attempt to target an adventurer from the one that is actively selected.
-     * @param {string} tokenKeyToTarget - Adventurer key to be targeted
+     * Attempt ot unequip a card from an adventurer
+     * @param {string} adventurerKey - Adventurer key to unequip card
+     * @param {object} cardToUnequip - Card object to be unequipped and placed back in deck
      */
-    const setTarget = (tokenKeyToTarget) => {
+    const unequipCard = (adventurerKey, cardToUnequip) => {
+        const card = adventurerState[adventurerKey].cards[cardToUnequip?.equipmentType];
+
+        if (card) {
+            const cardsCopy = [...cards];
+            cardsCopy.push(card);
+
+            adventurerDispatch({
+                type: adventurerActionTypes.equip,
+                slot: card.equipmentType,
+                adventurerKey,
+                card: null
+            });
+
+            setCards(cardsCopy);
+        }
+    };
+
+    /**
+     * Attempt to target an adventurer from the one that is actively selected.
+     * @param {string} adventurerKeyToTarget - Adventurer key to be targeted
+     */
+    const setTarget = (adventurerKeyToTarget) => {
         const { type, key } = selected;
 
         // only allow targeting of enemy adventurers until support/heal is added
-        if (type === selectionTypes.token && key && tokenKeyToTarget.startsWith('enemy')) {
-            const tokensCopy = {
-                ...tokens,
-                [key]: {
-                    ...tokens[key],
-                    target: tokenKeyToTarget
-                }
-            };
-
+        if (type === selectionTypes.adventurer && key && adventurerKeyToTarget.startsWith('enemy')) {
             let newMoveOrder = [...moveOrder];
 
             const existingMove = newMoveOrder.indexOf(key);
@@ -211,7 +217,12 @@ const Game = () => {
                 newMoveOrder.splice(existingMove, 1);
             }
 
-            setTokens(tokensCopy);
+            adventurerDispatch({
+                type: adventurerActionTypes.target,
+                adventurerKey: key,
+                target: adventurerKeyToTarget
+            });
+
             setMoveOrder([...newMoveOrder, key]);
             setSelected(emptySelection);
         }
@@ -219,107 +230,219 @@ const Game = () => {
 
     /**
      * Callback function for when an adventurer is clicked to handle equipping cards, targeting, and selecting
-     * @param tokenKey
+     * @param adventurerKey
      */
-    const onTokenClick = (tokenKey) => {
-        // if card is selected during onTokenClick, equip it
+    const onAdventurerClick = (adventurerKey) => {
+        // if card is selected during onAdventurerClick, equip it
         if (selected.type === selectionTypes.card && selected.key > -1) {
-            equipCard(tokenKey);
+            equipCard(adventurerKey);
         }
-        // if token is selected during onTokenClick, try to target it
-        if (selected.type === selectionTypes.token && selected.key) {
-            setTarget(tokenKey);
+        // if adventurer is selected during onAdventurerClick, try to target it
+        if (selected.type === selectionTypes.adventurer && selected.key) {
+            setTarget(adventurerKey);
         }
-        // if token being clicked is already selected, clear the selection
-        if (selected.type === selectionTypes.token && selected.key === tokenKey) {
+        // if adventurer being clicked is already selected, clear the selection
+        if (selected.type === selectionTypes.adventurer && selected.key === adventurerKey) {
             setSelected(emptySelection);
         }
-        // if there is no active selection during onTokenClick, then select the token
-        if (selected.type === null && !tokenKey.startsWith('enemy')) {
-            setSelected({ type: selectionTypes.token, key: tokenKey });
+        // if there is no active selection during onAdventurerClick, then select the adventurer
+        if (selected.type === null && !adventurerKey.startsWith('enemy')) {
+            setSelected({
+                type: selectionTypes.adventurer,
+                key: adventurerKey
+            });
         }
     };
 
+    /**
+     * Dispatches actions to update reducer so that attacking and defending adventurers trigger animation and sets new hp
+     * for defending adventurer. After a 2.5s delay the actions are dispatched to stop animation.
+     * @param {string} attackingAdventurerKey - Reducer key for adventurer attacking, ie. enemyAdventurer1
+     * @param {string} defendingAdventurerKey - Reducer key for adventurer defending, ie. adventurer5
+     * @param {number} newHp - New hp value for defending adventurer
+     */
+    const takeTurn = (attackingAdventurerKey, defendingAdventurerKey, newHp) => {
+        adventurerDispatch({
+            type: adventurerActionTypes.atk,
+            adventurerKey: attackingAdventurerKey,
+            isAtk: true
+        });
+
+        adventurerDispatch({
+            type: adventurerActionTypes.def,
+            adventurerKey: defendingAdventurerKey,
+            isDef: true
+        });
+
+        adventurerDispatch({
+            type: adventurerActionTypes.hp,
+            adventurerKey: defendingAdventurerKey,
+            hp: newHp
+        });
+
+        setTimeout(() => {
+            adventurerDispatch({
+                type: adventurerActionTypes.atk,
+                adventurerKey: attackingAdventurerKey,
+                isAtk: false
+            });
+
+            adventurerDispatch({
+                type: adventurerActionTypes.def,
+                adventurerKey: defendingAdventurerKey,
+                isDef: false
+            });
+        }, 2500);
+    };
+
+    const endTurn = () => {
+        const turn = {
+            adventurers: {
+                adventurer1: {
+                    target: adventurerState.adventurer1.target,
+                    cards: adventurerState.adventurer1.cards
+                },
+                adventurer2: {
+                    target: adventurerState.adventurer2.target,
+                    cards: adventurerState.adventurer2.cards
+                },
+                adventurer3: {
+                    target: adventurerState.adventurer3.target,
+                    cards: adventurerState.adventurer3.cards
+                },
+                adventurer4: {
+                    target: adventurerState.adventurer4.target,
+                    cards: adventurerState.adventurer4.cards
+                },
+                adventurer5: {
+                    target: adventurerState.adventurer5.target,
+                    cards: adventurerState.adventurer5.cards
+                }
+            },
+            moveOrder
+        };
+
+        console.log('turn', turn);
+
+        // endTurnCallback(turn);
+        setMoveOrder([]);
+    };
+
+    //     const turn = {
+    //         moveOrder:
+    //     };
+    //     endTurnCallback()
+    //     // @TODO CARSON callback to send move to metamask GOES HERE!
+    // }
+    //
+    // useEffect(() => {
+    //     takeTurn('adventurer1', 'enemyAdventurer1', 95);
+    // }, []);
+
     return (
         <div className={classes.container}>
-            <div className={classes.enemyTokens}>
-                <Token
-                    tokenRef={enemyToken1Ref}
-                    hp={30}
-                    onClickCallback={() => onTokenClick('enemyToken1')}
-                    size={tokenSize}
+            <div className={classes.enemyAdventurers}>
+                <Adventurer
+                    adventurerRef={enemyAdventurer1Ref}
+                    isAtk={adventurerState.enemyAdventurer1.isAtk}
+                    isDef={adventurerState.enemyAdventurer1.isDef}
+                    hp={adventurerState.enemyAdventurer1.hp}
+                    onClickCallback={() => onAdventurerClick('enemyAdventurer1')}
+                    size={adventurerSize}
                 />
-                <Token
-                    tokenRef={enemyToken2Ref}
-                    hp={100}
-                    onClickCallback={() => onTokenClick('enemyToken2')}
-                    size={tokenSize}
+                <Adventurer
+                    adventurerRef={enemyAdventurer2Ref}
+                    isAtk={adventurerState.enemyAdventurer2.isAtk}
+                    isDef={adventurerState.enemyAdventurer2.isDef}
+                    hp={adventurerState.enemyAdventurer2.hp}
+                    onClickCallback={() => onAdventurerClick('enemyAdventurer2')}
+                    size={adventurerSize}
                 />
-                <Token
-                    tokenRef={enemyToken3Ref}
-                    hp={100}
-                    onClickCallback={() => onTokenClick('enemyToken3')}
-                    size={tokenSize}
+                <Adventurer
+                    adventurerRef={enemyAdventurer3Ref}
+                    isAtk={adventurerState.enemyAdventurer3.isAtk}
+                    isDef={adventurerState.enemyAdventurer3.isDef}
+                    hp={adventurerState.enemyAdventurer3.hp}
+                    onClickCallback={() => onAdventurerClick('enemyAdventurer3')}
+                    size={adventurerSize}
                 />
-                <Token
-                    tokenRef={enemyToken4Ref}
-                    hp={80}
-                    onClickCallback={() => onTokenClick('enemyToken4')}
-                    size={tokenSize}
+                <Adventurer
+                    adventurerRef={enemyAdventurer4Ref}
+                    isAtk={adventurerState.enemyAdventurer4.isAtk}
+                    isDef={adventurerState.enemyAdventurer4.isDef}
+                    hp={adventurerState.enemyAdventurer4.hp}
+                    onClickCallback={() => onAdventurerClick('enemyAdventurer4')}
+                    size={adventurerSize}
                 />
-                <Token
-                    tokenRef={enemyToken5Ref}
-                    hp={50}
-                    onClickCallback={() => onTokenClick('enemyToken5')}
-                    size={tokenSize}
+                <Adventurer
+                    adventurerRef={enemyAdventurer5Ref}
+                    isAtk={adventurerState.enemyAdventurer5.isAtk}
+                    isDef={adventurerState.enemyAdventurer5.isDef}
+                    hp={adventurerState.enemyAdventurer5.hp}
+                    onClickCallback={() => onAdventurerClick('enemyAdventurer5')}
+                    size={adventurerSize}
                 />
             </div>
-            {/* friendly tokens */}
-            <div className={classes.friendlyTokens}>
-                <Token
-                    tokenRef={token1Ref}
-                    isSelected={selected.key === 'token1'}
+            <div className={classes.friendlyAdventurers}>
+                <Adventurer
+                    adventurerRef={adventurer1Ref}
                     disableHover={selected.type !== null}
-                    hp={30}
-                    cards={tokens.token1.cards}
-                    onClickCallback={() => onTokenClick('token1')}
-                    size={tokenSize}
+                    isSelected={selected.key === 'adventurer1'}
+                    isAtk={adventurerState.adventurer1.isAtk}
+                    isDef={adventurerState.adventurer1.isDef}
+                    hp={adventurerState.adventurer1.hp}
+                    cards={Object.values(adventurerState.adventurer1.cards).filter((card) => card !== null)}
+                    onClickCallback={() => onAdventurerClick('adventurer1')}
+                    onUnequipCallback={(card) => unequipCard('adventurer1', card)}
+                    size={adventurerSize}
                 />
-                <Token
-                    tokenRef={token2Ref}
-                    isSelected={selected.key === 'token2'}
+                <Adventurer
+                    adventurerRef={adventurer2Ref}
                     disableHover={selected.type !== null}
-                    hp={100}
-                    cards={tokens.token2.cards}
-                    onClickCallback={() => onTokenClick('token2')}
-                    size={tokenSize}
+                    isSelected={selected.key === 'adventurer2'}
+                    isAtk={adventurerState.adventurer2.isAtk}
+                    isDef={adventurerState.adventurer2.isDef}
+                    hp={adventurerState.adventurer2.hp}
+                    cards={Object.values(adventurerState.adventurer2.cards).filter((card) => card !== null)}
+                    onClickCallback={() => onAdventurerClick('adventurer2')}
+                    onUnequipCallback={(card) => unequipCard('adventurer2', card)}
+                    size={adventurerSize}
                 />
-                <Token
-                    tokenRef={token3Ref}
-                    isSelected={selected.key === 'token3'}
+                <Adventurer
+                    adventurerRef={adventurer3Ref}
                     disableHover={selected.type !== null}
-                    hp={100}
-                    cards={tokens.token3.cards}
-                    onClickCallback={() => onTokenClick('token3')}
-                    size={tokenSize}
+                    isAtk={adventurerState.adventurer3.isAtk}
+                    isDef={adventurerState.adventurer3.isDef}
+                    isSelected={selected.key === 'adventurer3'}
+                    hp={adventurerState.adventurer3.hp}
+                    cards={Object.values(adventurerState.adventurer3.cards).filter((card) => card !== null)}
+                    onClickCallback={() => onAdventurerClick('adventurer3')}
+                    onUnequipCallback={(card) => unequipCard('adventurer3', card)}
+                    size={adventurerSize}
                 />
-                <Token
-                    tokenRef={token4Ref}
-                    isSelected={selected.key === 'token4'}
+                <Adventurer
+                    adventurerRef={adventurer4Ref}
                     disableHover={selected.type !== null}
-                    hp={80}
-                    cards={tokens.token4.cards}
-                    onClickCallback={() => onTokenClick('token4')}
-                    size={tokenSize}
+                    isSelected={selected.key === 'adventurer4'}
+                    isAtk={adventurerState.adventurer4.isAtk}
+                    isDef={adventurerState.adventurer4.isDef}
+                    hp={adventurerState.adventurer4.hp}
+                    cards={Object.values(adventurerState.adventurer4.cards).filter((card) => card !== null)}
+                    onClickCallback={() => onAdventurerClick('adventurer4')}
+                    onUnequipCallback={(card) => unequipCard('adventurer4', card)}
+                    size={adventurerSize}
                 />
-                <Token
-                    tokenRef={token5Ref}
-                    isSelected={selected.key === 'token5'}
+                <Adventurer
+                    adventurerRef={adventurer5Ref}
                     disableHover={selected.type !== null}
-                    hp={50}
-                    cards={tokens.token5.cards}
-                    onClickCallback={() => onTokenClick('token5')}
-                    size={tokenSize}
+                    isSelected={selected.key === 'adventurer5'}
+                    isAtk={adventurerState.adventurer5.isAtk}
+                    isDef={adventurerState.adventurer5.isDef}
+                    hp={adventurerState.adventurer5.hp}
+                    cards={Object.values(adventurerState.adventurer5.cards).filter((card) => card !== null)}
+                    onClickCallback={() => onAdventurerClick('adventurer5')}
+                    onUnequipCallback={(card) => unequipCard('adventurer5', card)}
+                    size={adventurerSize}
                 />
             </div>
             <div className={classes.deckWrapper}>
@@ -331,14 +454,12 @@ const Game = () => {
                         setSelected({ type: selectionTypes.card, key: i });
                     }}
                 />
+                <div className={classes.buttonWrapper}>
+                    <Button text="End Turn" textColor="white" color="indianred" onClick={endTurn} />
+                </div>
             </div>
             {getTargets().map(({ isEnemy, startRef, endRef, order }) => (
-                <TargetIndicator
-                    isEnemy={isEnemy}
-                    startRef={startRef}
-                    endRef={endRef}
-                    order={order}
-                />
+                <TargetIndicator isEnemy={isEnemy} startRef={startRef} endRef={endRef} order={order} />
             ))}
         </div>
     );

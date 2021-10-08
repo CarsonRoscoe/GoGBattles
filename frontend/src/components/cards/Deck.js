@@ -1,21 +1,17 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { createUseStyles } from 'react-jss';
-import Card, {
-    cardWidths,
-    cardSizes,
-    cardHeightMultiplier,
-    cardPropTypes
-} from './Card';
+import Card, { cardWidths, cardSizes, cardHeightMultiplier, cardPropTypes } from './Card';
 
 const useDeckStyles = createUseStyles({
     container: {
-        width: '80vw', // @TODO make 100% work with scroll
+        width: '100vw', // @TODO make 100% work with scroll
         overflowX: 'scroll',
         overflowY: 'none',
         whiteSpace: 'nowrap',
         display: 'flex',
-        flexDirection: 'row'
+        flexDirection: 'row',
+        alignItems: 'center'
     }
 });
 
@@ -28,7 +24,25 @@ const useDeckStyles = createUseStyles({
  * @constructor
  */
 const Deck = ({ selected, cards, cardSize, onSelectedCallback }) => {
+    const containerRef = useRef();
     const classes = useDeckStyles();
+
+    const scrollListener = (e) => {
+        e.preventDefault();
+        containerRef.current.scrollLeft += e.deltaY;
+    };
+
+    useEffect(() => {
+        if (containerRef.current) {
+            containerRef.current.addEventListener('wheel', scrollListener);
+        }
+
+        return () => {
+            if (containerRef.current) {
+                containerRef.current.removeEventListener('wheel', scrollListener);
+            }
+        };
+    }, [containerRef]);
 
     const onScroll = () => {
         // @TODO magnification effect using containerCoords
@@ -36,13 +50,11 @@ const Deck = ({ selected, cards, cardSize, onSelectedCallback }) => {
 
     return (
         <div
+            ref={containerRef}
             className={classes.container}
             onScroll={onScroll}
             style={{
-                height:
-                    cardWidths[cardSize] *
-                        cardHeightMultiplier[cardSize] +
-                    50
+                height: cardWidths[cardSize] * cardHeightMultiplier[cardSize] + 50
             }}
         >
             {cards.map((card, i) => (
