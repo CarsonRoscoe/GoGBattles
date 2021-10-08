@@ -54,9 +54,9 @@ const Deck = ({ selected, cards, cardSize, onSelectedCallback }) => {
                     modifier={card.modifier}
                     equipmentType={card.equipmentType}
                     equipmentClass={card.equipmentClass}
-                    stats={card.stats}
-                    tokenValue={card.tokenValue}
-                    rarityType={card.rarityType}
+                    totalStats={card.totalStats}
+                    tokenValue={card.GOGTokenValue}
+                    rarityTier={card.rarityTier}
                     size={cardSize}
                     onSelectedCallback={() => onSelectedCallback(i)}
                 />

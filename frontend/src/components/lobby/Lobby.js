@@ -128,7 +128,7 @@ const Lobby = () => {
                             />
                             <div className={classes.selectedCardOptions}>
                                 <h3 className={classes.selectedCardOptionsHeader}>
-                                    Backed Value: {cards[selectedCardIndex].tokenValue}
+                                    Backed Value: {cards[selectedCardIndex].GOGTokenValue}
                                 </h3>
                                 <Button
                                     color="cadetblue"

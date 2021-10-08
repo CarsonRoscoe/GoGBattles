@@ -5,37 +5,24 @@
     modifier="Power x3"
     equipmentType="Neck"
     equipmentClass="Magic"
-    stats={{
-        offensive: [0, 1, 2],
+    totalStats={{
+        offense: [0, 1, 2],
             defensive: [1, -20, 5]
     }}
     tokenValue={1000}
-    rarityType="UNCOMMON"
+    rarityTier="UNCOMMON"
  */
+
+import cards from "./cards.json";
+
+const toolName = {
+    COPPER_HELMET : 'Copper Helmet',
+}
 
 export const getTestCards = () => {
     let testCards = [];
-    const prefixes = ['', '', '', '', 'Greater', 'Lesser'];
-    const types = [
-        'Sword',
-        'Dagger',
-        'Amulet',
-        'Chest',
-        'Legs',
-        'Trinket',
-        'Wand',
-        'Bow'
-    ];
-    const suffixes = [
-        'Dancing',
-        'Prancing',
-        'Fighting',
-        'Kiting',
-        'Killing',
-        'Healing',
-        'Stealing'
-    ];
-    const rarityTypes = [
+    
+const rarityTiers = [
         'COMMON',
         'UNCOMMON',
         'RARE',
@@ -48,34 +35,25 @@ export const getTestCards = () => {
     const nums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
     const getRandomElement = (array) =>
-        array[Math.floor(Math.random() * array.length)];
+        cards[Math.floor(Math.random() * cards.length)];
 
-    for (let i = 0; i < 20; i++) {
-        const prefix = getRandomElement(prefixes);
-        const type = getRandomElement(types);
-        const suffix = getRandomElement(suffixes);
-        const eclass = getRandomElement(classes);
+    for(let i = 0; i < 20; ++i) {
+        const card = getRandomElement(classes);
+
+        let type = card.name;
+        let suffix = '{}';
+
+        console.info(card);
 
         testCards.push({
-            name: `${prefix} ${type} of ${suffix}`,
+            name: card.name,
             image: `image of ${type}`,
-            modifier: `${suffix} x${getRandomElement(nums)}`,
+            modifier: `${card.modifier.modifierID}`,
             equipmentType: type,
-            equipmentClass: eclass,
-            stats: {
-                offensive: [
-                    getRandomElement(nums),
-                    getRandomElement(nums),
-                    getRandomElement(nums)
-                ],
-                defensive: [
-                    getRandomElement(nums),
-                    getRandomElement(nums),
-                    getRandomElement(nums)
-                ]
-            },
-            tokenValue: getRandomElement(nums) * 1000,
-            rarityType: getRandomElement(rarityTypes)
+            equipmentClass: card.equipmentClass,
+            totalStats: card.totalStats,
+            tokenValue: card.GoGTokenValue,
+            rarityTier: card.rarityTier
         });
     }
 

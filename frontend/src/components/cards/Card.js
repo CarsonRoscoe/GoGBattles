@@ -155,13 +155,13 @@ const useStatsStyles = createUseStyles({
 });
 
 /**
- * @param {number[]} offensive - Array of offensive stats [melee, mage, range]
+ * @param {number[]} offense - Array of offense stats [melee, mage, range]
  * @param {number[]} defensive - Array of defensive stats [melee, mage, range]
  * @param {number} height - Height of the stats section
  * @returns {JSX.Element}
  * @constructor
  */
-const Stats = ({ offensive, defensive, height }) => {
+const Stats = ({ offense, defensive, height }) => {
     const classes = useStatsStyles();
 
     const cellWidth = `${90 / 6}%`;
@@ -199,9 +199,9 @@ const Stats = ({ offensive, defensive, height }) => {
             <table>
                 <tbody>
                     <tr>
-                        <Stat stat="atkmelee" value={offensive[0]} />
-                        <Stat stat="atkmage" value={offensive[1]} />
-                        <Stat stat="atkrange" value={offensive[2]} />
+                        <Stat stat="atkmelee" value={offense[0]} />
+                        <Stat stat="atkmage" value={offense[1]} />
+                        <Stat stat="atkrange" value={offense[2]} />
                     </tr>
                     <tr>
                         <Stat stat="defmelee" value={defensive[0]} />
@@ -215,7 +215,7 @@ const Stats = ({ offensive, defensive, height }) => {
 };
 
 Stats.propTypes = {
-    offensive: PropTypes.arrayOf(PropTypes.number).isRequired,
+    offense: PropTypes.arrayOf(PropTypes.number).isRequired,
     defensive: PropTypes.arrayOf(PropTypes.number).isRequired,
     height: PropTypes.number.isRequired
 };
@@ -301,9 +301,9 @@ const useCardStyles = createUseStyles({
  * @param {string} modifier - Modifier to display below the Image
  * @param {string} equipmentType - Card's equipment type
  * @param {string} equipmentClass - Card's equipment class
- * @param {object} stats - Object containing offensive (number[]) and defensive (number[]) stats
+ * @param {object} stats - Object containing offense (number[]) and defensive (number[]) stats
  * @param {number} tokenValue - Card's value
- * @param {string} rarityType - Card's rarity type
+ * @param {string} rarityTier - Card's rarity type
  * @param {string} size - Size to render the card (sm, md, lg)
  * @param {function} onSelectedCallback - Callback function for when a card is selected/clicked
  * @returns {JSX.Element}
@@ -316,9 +316,9 @@ const Card = ({
     modifier,
     equipmentType,
     equipmentClass,
-    stats,
+    totalStats,
     tokenValue,
-    rarityType,
+    rarityTier,
     size,
     onSelectedCallback
 }) => {
@@ -335,7 +335,7 @@ const Card = ({
     const BOTTOM_HEIGHT = CARD_HEIGHT * 0.1;
 
     const getRarityColor = () => {
-        switch (rarityType) {
+        switch (rarityTier) {
             case 'COMMON':
                 return 'radial-gradient(circle, rgba(129,190,255,1) 0%, rgba(0,123,255,1) 100%)'; // #007bff
             case 'UNCOMMON':
@@ -354,6 +354,19 @@ const Card = ({
                 return 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 100%)'; // white
         }
     };
+    console.info({
+        isSelected,
+        name,
+        image,
+        modifier,
+        equipmentType,
+        equipmentClass,
+        totalStats,
+        tokenValue,
+        rarityTier,
+        size,
+        onSelectedCallback
+    });
 
     return (
         <div
@@ -376,8 +389,8 @@ const Card = ({
                 <Image image={image} height={IMAGE_HEIGHT} />
                 <Modifier modifier={modifier} height={MODIFIER_HEIGHT} />
                 <Stats
-                    offensive={stats.offensive}
-                    defensive={stats.defensive}
+                    offense={totalStats.offense}
+                    defensive={totalStats.defense}
                     height={STATS_HEIGHT}
                 />
                 <Bottom
@@ -398,12 +411,12 @@ export const cardPropTypes = {
     modifier: PropTypes.string.isRequired,
     equipmentType: PropTypes.string.isRequired,
     equipmentClass: PropTypes.string.isRequired,
-    stats: PropTypes.shape({
-        offensive: PropTypes.arrayOf(PropTypes.number),
-        defensive: PropTypes.arrayOf(PropTypes.number)
+    totalStats: PropTypes.shape({
+        offense: PropTypes.arrayOf(PropTypes.number),
+        defense: PropTypes.arrayOf(PropTypes.number)
     }),
     tokenValue: PropTypes.number.isRequired,
-    rarityType: PropTypes.string.isRequired,
+    rarityTier: PropTypes.string.isRequired,
     size: PropTypes.oneOf([...Object.values(cardSizes)]),
     onSelectedCallback: PropTypes.func
 };

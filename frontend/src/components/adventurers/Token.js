@@ -153,8 +153,8 @@ const Token = ({
                                     equipmentType={card.equipmentType}
                                     equipmentClass={card.equipmentClass}
                                     stats={card.stats}
-                                    tokenValue={card.tokenValue}
-                                    rarityType={card.rarityType}
+                                    tokenValue={card.GoGTokenValue}
+                                    rarityTier={card.rarityTier}
                                     size={equippedCardSize[size]}
                                 />
                             </div>
