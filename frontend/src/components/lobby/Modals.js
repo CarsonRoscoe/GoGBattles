@@ -50,8 +50,10 @@ const TransferTokenModal = {
           <TextField />
         </Grid>
         <Grid item xs={12}>
-          <Button onClick={() => {
-            Web3Helper.token.methods.transfer('Me', 100);
+          <Button onClick={async () => {
+            let result = await Web3Helper.token.methods.transferAsync('0xAfDC4CB1CE640Ffb3e1250E0b5C7BaF496fefe54', 1, (a, b) => {
+              console.info(a, b);
+            });
           }}>
             Submit
           </Button>

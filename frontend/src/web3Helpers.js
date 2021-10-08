@@ -1,5 +1,6 @@
 import Web3 from "web3";
 import Web3Modal from "web3modal";
+import contractsRaw from "./contracts/contracts";
 
 const providerOptions = {
   /* See Provider Options Section */
@@ -14,10 +15,25 @@ const web3Modal = new Web3Modal({
 let provider = {};
 let web3 = {};
 
+
+const Contracts = {};
+async function initializeContractsAsync(){
+  const accounts = await web3.eth.getAccounts();
+  Contracts.Token = new web3.eth.Contract(contractsRaw.Token.ABI, contractsRaw.Token.address);
+};
+
+
 const token = {
   methods : {
-    transfer : (to, amount) => {
-      console.info("transfer ", to, amount);
+    transferAsync : async (to, amount) => {
+      if (Contracts.Token != null) {
+        console.info(Contracts);
+        let transfer = Contracts.Token.methods.transfer(to, amount);
+        let result = transfer.send({ from : provider.selectedAddress, gasPrice: 5 });
+        console.info(transfer, result);
+      } else {
+        console.info("Connect first");
+      }
     }
   }
 };
@@ -39,6 +55,7 @@ const helpers = {
       provider = await web3Modal.connect();
       web3 = new Web3(provider);
       console.info("Already done");
+      await initializeContractsAsync();
       then({ provider, web3 });
   },
   getWeb3: () => web3,

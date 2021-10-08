@@ -354,19 +354,6 @@ const Card = ({
                 return 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 100%)'; // white
         }
     };
-    console.info({
-        isSelected,
-        name,
-        image,
-        modifier,
-        equipmentType,
-        equipmentClass,
-        totalStats,
-        tokenValue,
-        rarityTier,
-        size,
-        onSelectedCallback
-    });
 
     return (
         <div
