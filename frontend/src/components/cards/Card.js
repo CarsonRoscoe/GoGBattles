@@ -11,7 +11,7 @@ export const cardSizes = {
 };
 
 export const cardWidths = {
-    [cardSizes.sm]: 100,
+    [cardSizes.sm]: 80,
     [cardSizes.md]: 150,
     [cardSizes.lg]: 200,
     [cardSizes.xl]: 400
@@ -23,7 +23,7 @@ export const cardHeightMultiplier = {
     [cardSizes.sm]: 1.4,
     [cardSizes.md]: 1.4,
     [cardSizes.lg]: 1.4,
-    [cardSizes.lg]: 1.4
+    [cardSizes.xl]: 1.4
 };
 
 const useNameStyles = createUseStyles({
@@ -48,12 +48,7 @@ const Name = ({ name, height }) => {
     const classes = useNameStyles();
 
     return (
-        <Textfit
-            mode="single"
-            max={17}
-            className={classes.container}
-            style={{ height }}
-        >
+        <Textfit mode="single" max={24} className={classes.container} style={{ height }}>
             {name}
         </Textfit>
     );
@@ -125,12 +120,7 @@ const Modifier = ({ modifier, height }) => {
     const classes = useModifierStyles();
 
     return (
-        <Textfit
-            mode="single"
-            max={14}
-            className={classes.container}
-            style={{ height }}
-        >
+        <Textfit mode="single" max={18} className={classes.container} style={{ height }}>
             {modifier}
         </Textfit>
     );
@@ -169,25 +159,11 @@ const Stats = ({ offense, defensive, height }) => {
 
     const Stat = ({ stat, value }) => (
         <>
-            <td
-                className={classes.td}
-                style={{ width: cellWidth, paddingLeft: cellPadding }}
-            >
-                <img
-                    src={`card-icons/${stat}.png`}
-                    alt={stat}
-                    height={height * .3}
-                    width="auto"
-                />
+            <td className={classes.td} style={{ width: cellWidth, paddingLeft: cellPadding }}>
+                <img src={`card-icons/${stat}.png`} alt={stat} height={height * 0.3} width="auto" />
             </td>
-            <td
-                className={classes.td}
-                style={{ width: cellWidth, paddingRight: cellPadding }}
-            >
-                <Textfit
-                    mode="single"
-                    max={20}
-                >
+            <td className={classes.td} style={{ width: cellWidth, paddingRight: cellPadding }}>
+                <Textfit mode="single" max={24}>
                     {value}
                 </Textfit>
             </td>
@@ -254,18 +230,10 @@ const Bottom = ({ equipmentClass, equipmentType, tokenValue, height }) => {
 
     return (
         <div className={classes.container}>
-            <Textfit
-                mode="single"
-                max={17}
-                className={classes.equipment}
-            >
+            <Textfit mode="single" max={18} className={classes.equipment}>
                 {equipmentClass} ({equipmentType})
             </Textfit>
-            <Textfit
-                mode="single"
-                max={14}
-                className={classes.token}
-            >
+            <Textfit mode="single" max={18} className={classes.token}>
                 {tokenValue}
             </Textfit>
         </div>
@@ -354,19 +322,6 @@ const Card = ({
                 return 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 100%)'; // white
         }
     };
-    console.info({
-        isSelected,
-        name,
-        image,
-        modifier,
-        equipmentType,
-        equipmentClass,
-        totalStats,
-        tokenValue,
-        rarityTier,
-        size,
-        onSelectedCallback
-    });
 
     return (
         <div
@@ -381,18 +336,16 @@ const Card = ({
                 minWidth: CARD_WIDTH + 5,
                 maxWidth: CARD_WIDTH + 5,
                 background: getRarityColor(),
-                boxShadow: isSelected ? '0 0 20px red' : 'initial'
+                boxShadow: isSelected ? '0 0 20px red' : 'initial',
+                marginTop: isSelected ? -10 : 0,
+                zIndex: 999
             }}
         >
             <div className={classes.wrapper}>
                 <Name name={name} height={TITLE_HEIGHT} />
                 <Image image={image} height={IMAGE_HEIGHT} />
                 <Modifier modifier={modifier} height={MODIFIER_HEIGHT} />
-                <Stats
-                    offense={totalStats.offense}
-                    defensive={totalStats.defense}
-                    height={STATS_HEIGHT}
-                />
+                <Stats offense={totalStats.offense} defensive={totalStats.defense} height={STATS_HEIGHT} />
                 <Bottom
                     equipmentClass={equipmentClass}
                     equipmentType={equipmentType}

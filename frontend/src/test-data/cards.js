@@ -13,46 +13,37 @@
     rarityTier="UNCOMMON"
  */
 
-import cards from "./cards.json";
+import cards from './cards.json';
 
 const toolName = {
-    COPPER_HELMET : 'Copper Helmet',
-}
+    COPPER_HELMET: 'Copper Helmet'
+};
 
 export const getTestCards = () => {
     let testCards = [];
-    
-const rarityTiers = [
-        'COMMON',
-        'UNCOMMON',
-        'RARE',
-        'MYTHICAL',
-        'ROYAL',
-        'GODLY',
-        'ULTIMATE'
-    ];
+
+    const rarityTiers = ['COMMON', 'UNCOMMON', 'RARE', 'MYTHICAL', 'ROYAL', 'GODLY', 'ULTIMATE'];
     const classes = ['Magic', 'Archery', 'Melee'];
     const nums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
-    const getRandomElement = (array) =>
-        cards[Math.floor(Math.random() * cards.length)];
+    const getRandomElement = (array) => cards[Math.floor(Math.random() * cards.length)];
 
-    for(let i = 0; i < 20; ++i) {
+    for (let i = 0; i < 20; ++i) {
         const card = getRandomElement(classes);
 
         let type = card.name;
         let suffix = '{}';
 
-        console.info(card);
+        // console.info(card);
 
         testCards.push({
             name: card.name,
             image: `image of ${type}`,
             modifier: `${card.modifier.modifierID}`,
-            equipmentType: type,
+            equipmentType: card.equipmentType,
             equipmentClass: card.equipmentClass,
             totalStats: card.totalStats,
-            tokenValue: card.GoGTokenValue,
+            tokenValue: card.GOGTokenValue,
             rarityTier: card.rarityTier
         });
     }
