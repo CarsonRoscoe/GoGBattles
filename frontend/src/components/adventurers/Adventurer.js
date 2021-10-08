@@ -4,25 +4,25 @@ import { createUseStyles } from 'react-jss';
 import { Shake } from 'reshake';
 import Card, { cardPropTypes, cardSizes } from '../cards/Card';
 
-export const tokenSizes = {
+export const adventurerSizes = {
     sm: 'sm',
     md: 'md',
     lg: 'lg'
 };
 
-export const tokenWidths = {
-    [tokenSizes.sm]: 80,
-    [tokenSizes.md]: 100,
-    [tokenSizes.lg]: 140
+export const adventurerWidths = {
+    [adventurerSizes.sm]: 80,
+    [adventurerSizes.md]: 100,
+    [adventurerSizes.lg]: 140
 };
 
 export const equippedCardSize = {
-    [tokenSizes.sm]: cardSizes.sm,
-    [tokenSizes.md]: cardSizes.sm,
-    [tokenSizes.lg]: cardSizes.md
+    [adventurerSizes.sm]: cardSizes.sm,
+    [adventurerSizes.md]: cardSizes.sm,
+    [adventurerSizes.lg]: cardSizes.md
 };
 
-const useTokenStyles = createUseStyles({
+const useAdventurerStyles = createUseStyles({
     cardsContainer: {
         position: 'absolute',
         right: -15,
@@ -50,11 +50,11 @@ const useTokenStyles = createUseStyles({
         backgroundColor: 'green',
         width: '100%'
     },
-    tokenStats: {
+    adventurerStats: {
         backgroundColor: 'grey',
         minWidth: '80%'
     },
-    tokenWrapper: {
+    adventurerWrapper: {
         backgroundColor: 'orange',
         borderRadius: 8,
         display: 'flex',
@@ -65,78 +65,58 @@ const useTokenStyles = createUseStyles({
 });
 
 /**
- * @param {ref} tokenRef - useRef for this Token
- * @param {boolean} isSelected - If this token is selected render a glowing border
- * @param {boolean} isAtk - If this token is attacking this turn, then do a small animation
- * @param {boolean} isHit - If this token is being hit this turn, then do a small animation
+ * @param {ref} adventurerRef - useRef for this Adventurer
+ * @param {boolean} isSelected - If this adventurer is selected render a glowing border
+ * @param {boolean} isAtk - If this adventurer is attacking this turn, then do a small animation
+ * @param {boolean} isDef - If this adventurer is being hit this turn, then do a small animation
  * @param {boolean} disableHover - If the card zIndex hover should be disabled
- * @param {number} hp - Token's hp%
+ * @param {number} hp - Adventurer's hp%
  * @param {object[]} cards - Equipped cards
  * @param stats // @TODO
- * @param {string} size - The token size
- * @param {function} onClickCallback - Callback function for when the Token is clicked
+ * @param {string} size - The adventurer size
+ * @param {function} onClickCallback - Callback function for when the Adventurer is clicked
+ * @param {function} onClickCallback - Callback function for when an equipped card is clicked
  * @returns {JSX.Element}
  * @constructor
  */
-const Token = ({
-    tokenRef,
+const Adventurer = ({
+    adventurerRef,
     isSelected,
     isAtk,
-    isHit,
+    isDef,
     disableHover,
     hp,
     cards,
     stats,
     size,
-    onClickCallback
+    onClickCallback,
+    onUnequipCallback
 }) => {
-    const classes = useTokenStyles();
-    const [isTakingDamageEffectActive, setIsTakingDamageEffectActive] =
-        useState(isHit);
-    const [isAttackingEffectActive, setIsAttackingEffectActive] =
-        useState(isAtk);
+    const classes = useAdventurerStyles();
 
-    useEffect(() => {
-        if (isTakingDamageEffectActive) {
-            setTimeout(() => {
-                setIsTakingDamageEffectActive(false);
-            }, 1000);
-        }
+    const width = adventurerWidths[size];
+    const height = adventurerWidths[size];
 
-        if (isAttackingEffectActive) {
-            setTimeout(() => {
-                setIsAttackingEffectActive(false);
-            }, 1000);
-        }
-    }, [isAttackingEffectActive, isTakingDamageEffectActive]);
-
-    const width = tokenWidths[size];
-    const height = tokenWidths[size];
+    // @TODO make a better fan out effect when adventurer is focusde
+    const topOffset = isSelected ? 25 : 25;
+    const rightOffset = isSelected ? 15 : 15;
 
     return (
-        <div
-            ref={tokenRef}
-            className={classes.container}
-            onClick={onClickCallback}
-            style={{ width, height }}
-        >
+        <div ref={adventurerRef} className={classes.container} style={{ width, height }}>
             <Shake
-                active={isTakingDamageEffectActive || isAttackingEffectActive}
-                h={isAttackingEffectActive ? 0 : 30}
-                v={isAttackingEffectActive ? 100 : 0}
-                r={isAttackingEffectActive ? 0 : 0}
+                active={isDef || isAtk}
+                h={isAtk ? 0 : 30}
+                v={isAtk ? 100 : 0}
+                r={isAtk ? 0 : 0}
                 dur={1000}
-                int={isTakingDamageEffectActive ? 10 : 50}
+                int={isAtk ? 10 : 50}
                 max={100}
                 freez={false}
                 fixedStop={false}
                 fixed
             >
                 {cards.length > 0 && (
-                    <div
-                        className={classes.cardsContainer}
-                        style={{ width, height }}
-                    >
+                    <div className={classes.cardsContainer} style={{ width, height }}>
                         {cards.map((card, i) => (
                             <div
                                 key={card.name}
@@ -144,8 +124,8 @@ const Token = ({
                                     disableHover ? '' : classes.cardHover
                                 }`}
                                 style={{
-                                    top: 25 * (i + 1),
-                                    right: 15 * (i + 1),
+                                    top: topOffset * (i + 1),
+                                    right: rightOffset * (i + 1),
                                     zIndex: cards.length - i
                                 }}
                             >
@@ -156,17 +136,19 @@ const Token = ({
                                     modifier={card.modifier}
                                     equipmentType={card.equipmentType}
                                     equipmentClass={card.equipmentClass}
-                                    stats={card.stats}
-                                    tokenValue={card.GoGTokenValue}
+                                    totalStats={card.totalStats}
+                                    tokenValue={card.GOGTokenValue}
                                     rarityTier={card.rarityTier}
                                     size={equippedCardSize[size]}
+                                    onSelectedCallback={() => onUnequipCallback(card)}
                                 />
                             </div>
                         ))}
                     </div>
                 )}
                 <div
-                    className={classes.tokenWrapper}
+                    onClick={onClickCallback}
+                    className={classes.adventurerWrapper}
                     style={{
                         boxShadow: isSelected ? '0 0 20px red' : 'initial',
                         zIndex: cards.length + 1,
@@ -174,7 +156,7 @@ const Token = ({
                         height
                     }}
                 >
-                    <div className={classes.tokenStats}>
+                    <div className={classes.adventurerStats}>
                         {stats.map((stat) => (
                             <>
                                 {stat}
@@ -183,10 +165,7 @@ const Token = ({
                         ))}
                     </div>
                     <div className={classes.hpBar}>
-                        <div
-                            className={classes.hpValue}
-                            style={{ height: `${hp}%` }}
-                        />
+                        <div className={classes.hpValue} style={{ height: `${hp}%` }} />
                     </div>
                 </div>
             </Shake>
@@ -194,28 +173,30 @@ const Token = ({
     );
 };
 
-Token.propTypes = {
-    tokenRef: PropTypes.shape({ current: PropTypes.instanceOf(Element) }),
+Adventurer.propTypes = {
+    adventurerRef: PropTypes.shape({ current: PropTypes.instanceOf(Element) }),
     isSelected: PropTypes.bool,
     isAtk: PropTypes.bool,
-    isHit: PropTypes.bool,
+    isDef: PropTypes.bool,
     disableHover: PropTypes.bool,
     hp: PropTypes.number.isRequired,
     cards: PropTypes.arrayOf(PropTypes.shape(cardPropTypes)),
     stats: PropTypes.array,
-    size: PropTypes.oneOf(Object.values(tokenSizes)),
-    onClickCallback: PropTypes.func
+    size: PropTypes.oneOf(Object.values(adventurerSizes)),
+    onClickCallback: PropTypes.func,
+    onUnequipCallback: PropTypes.func
 };
 
-Token.defaultProps = {
+Adventurer.defaultProps = {
     isSelected: false,
     isAtk: false,
-    isHit: false,
+    isDef: false,
     disableHover: false,
     cards: [],
     stats: [],
-    size: tokenSizes.md,
-    onClickCallback: () => undefined
+    size: adventurerSizes.md,
+    onClickCallback: () => undefined,
+    onUnequipCallback: () => undefined
 };
 
-export default Token;
+export default Adventurer;

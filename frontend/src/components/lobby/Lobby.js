@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import { createUseStyles } from 'react-jss';
 import { getTestCards } from '../../test-data/cards';
 import Deck from '../cards/Deck';
@@ -7,7 +8,7 @@ import Button from '../inputs/Button';
 import useWindowDimensions from '../../hooks/useWindowDimensions';
 import { cardSizes } from '../cards/Card';
 import web3Helpers from '../../web3Helpers';
-import Modals from './Modals';
+import { TransferTokenModalContent } from './Modals';
 
 import Modal from '@mui/material/Modal';
 
@@ -87,49 +88,31 @@ const testCards = getTestCards();
 
 const Lobby = () => {
     const classes = useLobbyStyles();
+    const history = useHistory();
     const { width } = useWindowDimensions();
 
     const cards = testCards; // @TODO fetch from account
     const [selectedCardIndex, setSelectedCardIndex] = useState(-1);
-    const [metaMaskButtonText, setMetaMaskButtonText] = useState(
-        web3Helpers.getLoginState()
-    );
-    const [modal, setModal] = useState(<Button></Button>);
-    const [modalIsOpen, setIsOpen] = React.useState(false);
-    const [modalContent, setModalContent] = React.useState(
-        <div>I am a modal</div>
-    );
-    const [modalStyle, setModalStyle] = React.useState(<div>I am a modal</div>);
-
-    function openModal() {
-        setIsOpen(true);
-    }
-
-    function closeModal() {
-        setIsOpen(false);
-    }
+    const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+    const [metaMaskButtonText, setMetaMaskButtonText] = useState(web3Helpers.getLoginState());
 
     const { cardSize } = getLobbySizes(width);
+
+    const findGame = () => {
+        // @TODO find match and then route
+        history.push('/play');
+    };
 
     return (
         <div className={classes.container}>
             <div className={classes.top}>
                 <div className={classes.left}>
-                    <Button
-                        color="indianred"
-                        textColor="white"
-                        text="Find Game"
-                        onClick={undefined}
-                    />
+                    <Button color="indianred" textColor="white" text="Find Game" onClick={findGame} />
                 </div>
                 <div className={classes.middle}>
                     {selectedCardIndex >= 0 && (
                         <>
-                            <Card
-                                isSelected
-                                size={cardSize}
-                                {...cards[selectedCardIndex]}
-                            />
+                            <Card isSelected size={cardSize} {...cards[selectedCardIndex]} />
                             <div className={classes.selectedCardOptions}>
                                 <h3
                                     className={
@@ -143,13 +126,7 @@ const Lobby = () => {
                                     color="cadetblue"
                                     textColor="white"
                                     text="Send to User"
-                                    onClick={() => {
-                                        setModalContent(
-                                            Modals.transfer.content
-                                        );
-                                        setModalStyle(Modals.transfer.style);
-                                        openModal();
-                                    }}
+                                    onClick={() => setIsTransferModalOpen(true)}
                                 />
                                 <Button
                                     color="cadetblue"
@@ -195,7 +172,7 @@ const Lobby = () => {
                                 );
                             });
                         }}
-                    ></Button>
+                    />
                     <h3>Token Balance: [tokenBalance]</h3>
                     <h3>Token Backed: [tokenBacked]</h3>
                 </div>
@@ -209,12 +186,12 @@ const Lobby = () => {
                 />
             </div>
             <Modal
-                open={modalIsOpen}
-                onClose={closeModal}
+                open={isTransferModalOpen}
+                onClose={() => setIsTransferModalOpen(false)}
                 aria-labelledby="modal-modal-title"
                 aria-describedby="modal-modal-description"
             >
-                {modalContent}
+                <TransferTokenModalContent />
             </Modal>
         </div>
     );

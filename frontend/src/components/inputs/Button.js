@@ -26,11 +26,7 @@ const Button = ({ text, color, textColor, onClick }) => {
     const classes = useButtonStyles();
 
     return (
-        <button
-            className={classes.container}
-            style={{ backgroundColor: color }}
-            onClick={onClick}
-        >
+        <button className={classes.container} style={{ backgroundColor: color }} onClick={onClick}>
             <span className={classes.text} style={{ color: textColor }}>
                 {text}
             </span>

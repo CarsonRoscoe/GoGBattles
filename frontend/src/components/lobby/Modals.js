@@ -1,12 +1,10 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import Modal from 'react-modal';
+import React, { useState } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
-import Web3Helper from '../../web3Helpers';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
+import Web3Helper from '../../web3Helpers';
 
 const style = {
     position: 'absolute',
@@ -20,9 +18,12 @@ const style = {
     p: 4
 };
 
-const TransferTokenModal = {
-    content: (
-        <div>
+export const TransferTokenModalContent = React.forwardRef((props, ref) => {
+    const [to, setTo] = useState('');
+    const [amount, setAmount] = useState(0);
+
+    return (
+        <div ref={ref} {...props}>
             <Box sx={style}>
                 <Typography id="modal-modal-title" variant="h6" component="h2">
                     Transfer
@@ -37,7 +38,7 @@ const TransferTokenModal = {
                         </Typography>
                     </Grid>
                     <Grid item xs={9}>
-                        <TextField />
+                        <TextField value={to} onChange={(e) => setTo(e.target.value)} />
                     </Grid>
                     <Grid item xs={3}>
                         <Typography id="modal-modal-description" sx={{ mt: 2 }}>
@@ -45,19 +46,13 @@ const TransferTokenModal = {
                         </Typography>
                     </Grid>
                     <Grid item xs={9}>
-                        <TextField />
+                        <TextField value={amount} onChange={(e) => setAmount(e.target.value)} />
                     </Grid>
                     <Grid item xs={12}>
                         <Button
-                            onClick={async () => {
-                                let result =
-                                    await Web3Helper.token.methods.transferAsync(
-                                        '0xAfDC4CB1CE640Ffb3e1250E0b5C7BaF496fefe54',
-                                        1,
-                                        (a, b) => {
-                                            console.info(a, b);
-                                        }
-                                    );
+                            onClick={() => {
+                                console.log(to, amount);
+                                Web3Helper.token.methods.transferAsync('Me', 100);
                             }}
                         >
                             Submit
@@ -66,12 +61,5 @@ const TransferTokenModal = {
                 </Grid>
             </Box>
         </div>
-    ),
-    style
-};
-
-const Modals = {
-    transfer: TransferTokenModal
-};
-
-export default Modals;
+    );
+});
