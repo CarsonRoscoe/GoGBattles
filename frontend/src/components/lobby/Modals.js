@@ -6,6 +6,7 @@ import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 import Web3Helper from '../../web3Helpers';
 import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
 
 const style = {
   position: 'absolute',
@@ -19,6 +20,9 @@ const style = {
   p: 4,
 };
 
+
+
+
 const TransferTokenModal = {
   content : <div> 
     <Box sx={style}>
@@ -28,33 +32,28 @@ const TransferTokenModal = {
       <Typography id="modal-modal-description" sx={{ mt: 2 }}>
           Enter the amount to transfer
       </Typography>
-      <Grid container spacing={2}>
-        <Grid item xs={8}>
-          <Button onClick={() => {
-            Web3Helper.token.methods.transfer('Me', 100);
-          }}>
-            xs=8
-          </Button>
+      <Grid container spacing={3}>
+        <Grid item xs={3}>
+          <Typography id="modal-modal-description" sx={{ mt: 2 }}>
+            To
+          </Typography>
         </Grid>
-        <Grid item xs={4}>
-          <Button onClick={() => {
-            Web3Helper.token.methods.transfer('Me', 100);
-          }}>
-            xs=4
-          </Button>
+        <Grid item xs={9}>
+          <TextField />
         </Grid>
-        <Grid item xs={4}>
-          <Button onClick={() => {
-            Web3Helper.token.methods.transfer('Me', 100);
-          }}>
-            xs = 4
-          </Button>
+        <Grid item xs={3}>
+        <Typography id="modal-modal-description" sx={{ mt: 2 }}>
+            Amount
+          </Typography>
         </Grid>
-        <Grid item xs={8}>
+        <Grid item xs={9}>
+          <TextField />
+        </Grid>
+        <Grid item xs={12}>
           <Button onClick={() => {
             Web3Helper.token.methods.transfer('Me', 100);
           }}>
-            xs = 8
+            Submit
           </Button>
         </Grid>
       </Grid>
