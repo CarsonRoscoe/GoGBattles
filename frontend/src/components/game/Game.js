@@ -44,11 +44,10 @@ const useGameStyles = createUseStyles({
         flex: 1,
         flexDirection: 'row',
         justifyContent: 'space-between',
-        maxHeight: '25%',
+        maxHeight: '20%',
         minWidth: '80%'
     },
     friendlyAdventurers: {
-        alignItems: 'center',
         backgroundColor: 'palegreen',
         display: 'flex',
         flex: 1,
@@ -56,6 +55,14 @@ const useGameStyles = createUseStyles({
         justifyContent: 'space-between',
         minWidth: '80%',
         maxHeight: '40%'
+    },
+    friendlyAdventurersWrapper: {
+        alignItems: 'flex-start',
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: '5%',
+        minWidth: '100%'
     }
 });
 
@@ -384,66 +391,68 @@ const Game = () => {
                 />
             </div>
             <div className={classes.friendlyAdventurers}>
-                <Adventurer
-                    adventurerRef={adventurer1Ref}
-                    disableHover={selected.type !== null}
-                    isSelected={selected.key === 'adventurer1'}
-                    isAtk={adventurerState.adventurer1.isAtk}
-                    isDef={adventurerState.adventurer1.isDef}
-                    hp={adventurerState.adventurer1.hp}
-                    cards={Object.values(adventurerState.adventurer1.cards).filter((card) => card !== null)}
-                    onClickCallback={() => onAdventurerClick('adventurer1')}
-                    onUnequipCallback={(card) => unequipCard('adventurer1', card)}
-                    size={adventurerSize}
-                />
-                <Adventurer
-                    adventurerRef={adventurer2Ref}
-                    disableHover={selected.type !== null}
-                    isSelected={selected.key === 'adventurer2'}
-                    isAtk={adventurerState.adventurer2.isAtk}
-                    isDef={adventurerState.adventurer2.isDef}
-                    hp={adventurerState.adventurer2.hp}
-                    cards={Object.values(adventurerState.adventurer2.cards).filter((card) => card !== null)}
-                    onClickCallback={() => onAdventurerClick('adventurer2')}
-                    onUnequipCallback={(card) => unequipCard('adventurer2', card)}
-                    size={adventurerSize}
-                />
-                <Adventurer
-                    adventurerRef={adventurer3Ref}
-                    disableHover={selected.type !== null}
-                    isAtk={adventurerState.adventurer3.isAtk}
-                    isDef={adventurerState.adventurer3.isDef}
-                    isSelected={selected.key === 'adventurer3'}
-                    hp={adventurerState.adventurer3.hp}
-                    cards={Object.values(adventurerState.adventurer3.cards).filter((card) => card !== null)}
-                    onClickCallback={() => onAdventurerClick('adventurer3')}
-                    onUnequipCallback={(card) => unequipCard('adventurer3', card)}
-                    size={adventurerSize}
-                />
-                <Adventurer
-                    adventurerRef={adventurer4Ref}
-                    disableHover={selected.type !== null}
-                    isSelected={selected.key === 'adventurer4'}
-                    isAtk={adventurerState.adventurer4.isAtk}
-                    isDef={adventurerState.adventurer4.isDef}
-                    hp={adventurerState.adventurer4.hp}
-                    cards={Object.values(adventurerState.adventurer4.cards).filter((card) => card !== null)}
-                    onClickCallback={() => onAdventurerClick('adventurer4')}
-                    onUnequipCallback={(card) => unequipCard('adventurer4', card)}
-                    size={adventurerSize}
-                />
-                <Adventurer
-                    adventurerRef={adventurer5Ref}
-                    disableHover={selected.type !== null}
-                    isSelected={selected.key === 'adventurer5'}
-                    isAtk={adventurerState.adventurer5.isAtk}
-                    isDef={adventurerState.adventurer5.isDef}
-                    hp={adventurerState.adventurer5.hp}
-                    cards={Object.values(adventurerState.adventurer5.cards).filter((card) => card !== null)}
-                    onClickCallback={() => onAdventurerClick('adventurer5')}
-                    onUnequipCallback={(card) => unequipCard('adventurer5', card)}
-                    size={adventurerSize}
-                />
+                <div className={classes.friendlyAdventurersWrapper}>
+                    <Adventurer
+                        adventurerRef={adventurer1Ref}
+                        disableHover={selected.type !== null}
+                        isSelected={selected.key === 'adventurer1'}
+                        isAtk={adventurerState.adventurer1.isAtk}
+                        isDef={adventurerState.adventurer1.isDef}
+                        hp={adventurerState.adventurer1.hp}
+                        cards={Object.values(adventurerState.adventurer1.cards).filter((card) => card !== null)}
+                        onClickCallback={() => onAdventurerClick('adventurer1')}
+                        onUnequipCallback={(card) => unequipCard('adventurer1', card)}
+                        size={adventurerSize}
+                    />
+                    <Adventurer
+                        adventurerRef={adventurer2Ref}
+                        disableHover={selected.type !== null}
+                        isSelected={selected.key === 'adventurer2'}
+                        isAtk={adventurerState.adventurer2.isAtk}
+                        isDef={adventurerState.adventurer2.isDef}
+                        hp={adventurerState.adventurer2.hp}
+                        cards={Object.values(adventurerState.adventurer2.cards).filter((card) => card !== null)}
+                        onClickCallback={() => onAdventurerClick('adventurer2')}
+                        onUnequipCallback={(card) => unequipCard('adventurer2', card)}
+                        size={adventurerSize}
+                    />
+                    <Adventurer
+                        adventurerRef={adventurer3Ref}
+                        disableHover={selected.type !== null}
+                        isAtk={adventurerState.adventurer3.isAtk}
+                        isDef={adventurerState.adventurer3.isDef}
+                        isSelected={selected.key === 'adventurer3'}
+                        hp={adventurerState.adventurer3.hp}
+                        cards={Object.values(adventurerState.adventurer3.cards).filter((card) => card !== null)}
+                        onClickCallback={() => onAdventurerClick('adventurer3')}
+                        onUnequipCallback={(card) => unequipCard('adventurer3', card)}
+                        size={adventurerSize}
+                    />
+                    <Adventurer
+                        adventurerRef={adventurer4Ref}
+                        disableHover={selected.type !== null}
+                        isSelected={selected.key === 'adventurer4'}
+                        isAtk={adventurerState.adventurer4.isAtk}
+                        isDef={adventurerState.adventurer4.isDef}
+                        hp={adventurerState.adventurer4.hp}
+                        cards={Object.values(adventurerState.adventurer4.cards).filter((card) => card !== null)}
+                        onClickCallback={() => onAdventurerClick('adventurer4')}
+                        onUnequipCallback={(card) => unequipCard('adventurer4', card)}
+                        size={adventurerSize}
+                    />
+                    <Adventurer
+                        adventurerRef={adventurer5Ref}
+                        disableHover={selected.type !== null}
+                        isSelected={selected.key === 'adventurer5'}
+                        isAtk={adventurerState.adventurer5.isAtk}
+                        isDef={adventurerState.adventurer5.isDef}
+                        hp={adventurerState.adventurer5.hp}
+                        cards={Object.values(adventurerState.adventurer5.cards).filter((card) => card !== null)}
+                        onClickCallback={() => onAdventurerClick('adventurer5')}
+                        onUnequipCallback={(card) => unequipCard('adventurer5', card)}
+                        size={adventurerSize}
+                    />
+                </div>
             </div>
             <div className={classes.deckWrapper}>
                 <Deck

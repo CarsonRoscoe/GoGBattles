@@ -37,7 +37,8 @@ export const getTestCards = () => {
         // console.info(card);
 
         testCards.push({
-            name: card.name,
+            // name: card.name,
+            name: card.name.substring(0, card.name.indexOf('of')),
             image: `image of ${type}`,
             modifier: `${card.modifier.modifierID}`,
             equipmentType: card.equipmentType,

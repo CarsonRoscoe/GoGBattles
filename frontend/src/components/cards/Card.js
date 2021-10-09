@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import PropTypes from 'prop-types';
 import { Textfit } from 'react-textfit';
 import { createUseStyles } from 'react-jss';
+import OverflowTip from '../inputs/OverflowTip';
 
 export const cardSizes = {
     sm: 'sm',
@@ -11,8 +12,8 @@ export const cardSizes = {
 };
 
 export const cardWidths = {
-    [cardSizes.sm]: 80,
-    [cardSizes.md]: 150,
+    [cardSizes.sm]: 120,
+    [cardSizes.md]: 175,
     [cardSizes.lg]: 200,
     [cardSizes.xl]: 400
 };
@@ -48,9 +49,14 @@ const Name = ({ name, height }) => {
     const classes = useNameStyles();
 
     return (
-        <Textfit mode="single" max={24} className={classes.container} style={{ height }}>
-            {name}
-        </Textfit>
+        <div
+            className={classes.container}
+            style={{ height }}
+        >
+            <OverflowTip>
+                {name}
+            </OverflowTip>
+        </div>
     );
 };
 
@@ -120,9 +126,12 @@ const Modifier = ({ modifier, height }) => {
     const classes = useModifierStyles();
 
     return (
-        <Textfit mode="single" max={18} className={classes.container} style={{ height }}>
+        <div
+            className={classes.container}
+            style={{ height }}
+        >
             {modifier}
-        </Textfit>
+        </div>
     );
 };
 
@@ -140,7 +149,8 @@ const useStatsStyles = createUseStyles({
         width: '100%'
     },
     td: {
-        textAlign: 'center'
+        textAlign: 'center',
+        fontSize: 20
     }
 });
 
@@ -163,9 +173,7 @@ const Stats = ({ offense, defensive, height }) => {
                 <img src={`card-icons/${stat}.png`} alt={stat} height={height * 0.3} width="auto" />
             </td>
             <td className={classes.td} style={{ width: cellWidth, paddingRight: cellPadding }}>
-                <Textfit mode="single" max={24}>
-                    {value}
-                </Textfit>
+                {value}
             </td>
         </>
     );
@@ -230,12 +238,12 @@ const Bottom = ({ equipmentClass, equipmentType, tokenValue, height }) => {
 
     return (
         <div className={classes.container}>
-            <Textfit mode="single" max={18} className={classes.equipment}>
+            <div className={classes.equipment}>
                 {equipmentClass} ({equipmentType})
-            </Textfit>
-            <Textfit mode="single" max={18} className={classes.token}>
+            </div>
+            <div className={classes.token}>
                 {tokenValue}
-            </Textfit>
+            </div>
         </div>
     );
 };
