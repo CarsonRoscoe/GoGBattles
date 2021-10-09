@@ -31,36 +31,32 @@ async function initializeContractsAsync() {
     initializeContract('Vault');
     initializeContract('MatchHistory');
     initializeContract('Coordinator');
+    initializeContract('USDC');
+    initializeContract('aUSDC');
+    initializeContract('DAI');
+    initializeContract('aDAI');
 }
 
-const token = {
-    methods: {
-        transferAsync: async (to, amount) => {
-            if (Contracts.Token != null) {
-                console.info(Contracts);
-                let transfer = Contracts.Token.methods.transfer(to, amount);
-                let result = transfer.send({
-                    from: provider.selectedAddress,
-                    gasPrice: 5
-                });
-                console.info(transfer, result);
-            } else {
-                console.info('Connect first');
-            }
-        }
-    }
-};
+// const ContractHelper = {
+//   Token : {
+//     transferAsync: async (to, amount) => {
+//       if (Contracts.Token != null) {
+//           console.info(Contracts);
+//           let transfer = Contracts.Token.methods.transfer(to, amount);
+//           let result = transfer.send({
+//               from: provider.selectedAddress,
+//               gasPrice: 5
+//           });
+//           console.info(transfer, result);
+//       } else {
+//           console.info('Connect first');
+//       } 
+//     },
+//     mintAsync: async(amount, to) => {
 
-const cards = {
-    burnForToken: (callback) => {
-        window.alert('Open modal');
-        return callback('burnForToken payload');
-    },
-    burnForStablecoins: (callback) => {
-        window.alert('Open modal');
-        return callback('burnForMoney payload');
-    }
-};
+//     },
+//   },
+// }
 
 const helpers = {
     connectAsync: async (then) => {
@@ -77,6 +73,11 @@ const helpers = {
     },
     getWeb3: () => web3,
     getProvider: () => provider,
+    getSendOptions: () => { 
+        return {
+            from : provider.selectedAddress 
+        }
+    },
     getLoginState: () => {
         if (provider.selectedAddress == null) {
             return 'Connect to MetaMask';
@@ -91,8 +92,7 @@ const helpers = {
         }
         return '<unknown state>';
     },
-    token,
-    cards
+    contracts : Contracts,
 };
 
 export default helpers;

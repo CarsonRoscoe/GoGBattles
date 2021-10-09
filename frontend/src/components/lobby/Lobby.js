@@ -8,7 +8,7 @@ import Button from '../inputs/Button';
 import useWindowDimensions from '../../hooks/useWindowDimensions';
 import { cardSizes } from '../cards/Card';
 import web3Helpers from '../../web3Helpers';
-import { TransferTokenModalContent } from './Modals';
+import { TransferTokenModalContent, TransferCardModalContent, BurnTokenForStablecoinModalContent, BurnCardForTokenModalContent, MintCardPackModalContent } from './Modals';
 
 import Modal from '@mui/material/Modal';
 
@@ -93,8 +93,29 @@ const Lobby = () => {
 
     const cards = testCards; // @TODO fetch from account
     const [selectedCardIndex, setSelectedCardIndex] = useState(-1);
-    const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+    const [isTransferCardModalOpen, setIsTransferCardModalOpen] = useState(false);
+    const [isTransferTokenModalOpen, setIsTransferTokenModalOpen] = useState(false);
+    const [isBurnTokenForStablecoinModalOpen, setIsBurnTokenForStablecoinModalOpen] = useState(false);
+    const [isBurnCardForTokenModalOpen, setIsBurnCardForTokenModalOpen] = useState(false);
+    const [isMintCardPackModalOpen, setIsMintCardPackModalOpen] = useState(false);
     const [metaMaskButtonText, setMetaMaskButtonText] = useState(web3Helpers.getLoginState());
+    const [tokenBalance, setTokenBalance] = useState(0);
+    const [backedBalance, setBackedBalance] = useState(0);
+
+    let refreshBalances = () => {
+        web3Helpers.contracts.Token.methods.balanceOf(web3Helpers.getProvider().selectedAddress).call().then((balanceStr) => {
+            let balance = Number.parseFloat(balanceStr);
+            setTokenBalance(balance);
+            web3Helpers.contracts.Cards.methods.backingBalanceOf(web3Helpers.getProvider().selectedAddress).call().then((cardValueStr) => {
+                let cardValue = Number.parseFloat(cardValueStr);
+                setBackedBalance(balance + cardValue);
+            }).catch((e) => {
+                console.info(e);
+            });
+        }).catch((e) => {
+            console.info(e);
+        });
+    }
 
     const { cardSize } = getLobbySizes(width);
 
@@ -126,35 +147,13 @@ const Lobby = () => {
                                     color="cadetblue"
                                     textColor="white"
                                     text="Send to User"
-                                    onClick={() => setIsTransferModalOpen(true)}
+                                    onClick={() => setIsTransferCardModalOpen(true)}
                                 />
                                 <Button
                                     color="cadetblue"
                                     textColor="white"
                                     text="Burn for Token"
-                                    onClick={() => {
-                                        web3Helpers.cards.burnForToken(
-                                            (res) => {
-                                                setMetaMaskButtonText(
-                                                    web3Helpers.getLoginState()
-                                                );
-                                            }
-                                        );
-                                    }}
-                                />
-                                <Button
-                                    color="cadetblue"
-                                    textColor="white"
-                                    text="Burn for Stablecoins"
-                                    onClick={() => {
-                                        web3Helpers.cards.burnForStablecoins(
-                                            (res) => {
-                                                setMetaMaskButtonText(
-                                                    web3Helpers.getLoginState()
-                                                );
-                                            }
-                                        );
-                                    }}
+                                    onClick={() => setIsBurnCardForTokenModalOpen(true)}
                                 />
                             </div>
                         </>
@@ -170,11 +169,36 @@ const Lobby = () => {
                                 setMetaMaskButtonText(
                                     web3Helpers.getLoginState()
                                 );
+                                refreshBalances();
                             });
                         }}
                     />
-                    <h3>Token Balance: [tokenBalance]</h3>
-                    <h3>Token Backed: [tokenBacked]</h3>
+                    <h3>Token Balance: {tokenBalance}</h3>
+                    <h3>Token Backed: {backedBalance}</h3>
+                    <Button
+                        color="cadetblue"
+                        textColor="white"
+                        text="Transfer Token"
+                        onClick={() => setIsTransferTokenModalOpen(true)}
+                    >
+                        Transfer
+                    </Button>
+                    <Button
+                        color="cadetblue"
+                        textColor="white"
+                        text="Mint Pack"
+                        onClick={() => setIsMintCardPackModalOpen(true)}
+                    >
+                        Mint Pack
+                    </Button>
+                    <Button
+                        color="cadetblue"
+                        textColor="white"
+                        text="Burn for Stablecoins"
+                        onClick={() => setIsBurnTokenForStablecoinModalOpen(true)}
+                    >
+                        Withdraw
+                    </Button>
                 </div>
             </div>
             <div className={classes.bottom}>
@@ -186,12 +210,44 @@ const Lobby = () => {
                 />
             </div>
             <Modal
-                open={isTransferModalOpen}
-                onClose={() => setIsTransferModalOpen(false)}
+                open={isTransferCardModalOpen}
+                onClose={() => setIsTransferCardModalOpen(false)}
+                aria-labelledby="modal-modal-title"
+                aria-describedby="modal-modal-description"
+            >
+                <TransferCardModalContent />
+            </Modal>
+            <Modal
+                open={isBurnTokenForStablecoinModalOpen}
+                onClose={() => setIsBurnTokenForStablecoinModalOpen(false)}
+                aria-labelledby="modal-modal-title"
+                aria-describedby="modal-modal-description"
+            >
+                <BurnTokenForStablecoinModalContent />
+            </Modal>
+            <Modal
+                open={isBurnCardForTokenModalOpen}
+                onClose={() => setIsBurnCardForTokenModalOpen(false)}
+                aria-labelledby="modal-modal-title"
+                aria-describedby="modal-modal-description"
+            >
+                <BurnCardForTokenModalContent />
+            </Modal>
+            <Modal
+                open={isTransferTokenModalOpen}
+                onClose={() => setIsTransferTokenModalOpen(false)}
                 aria-labelledby="modal-modal-title"
                 aria-describedby="modal-modal-description"
             >
                 <TransferTokenModalContent />
+            </Modal>
+            <Modal
+                open={isMintCardPackModalOpen}
+                onClose={() => setIsMintCardPackModalOpen(false)}
+                aria-labelledby="modal-modal-title"
+                aria-describedby="modal-modal-description"
+            >
+                <MintCardPackModalContent />
             </Modal>
         </div>
     );

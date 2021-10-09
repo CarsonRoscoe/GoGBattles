@@ -52,8 +52,8 @@ contract GoGBattlesCards is ERC1155, AccessControl, ERC1155Burnable {
 
     function mintBatch(address to, uint256[] memory cardIds, uint256[] memory values) public onlyRole(MINTER_ROLE) returns(uint256[] memory) {
         require(cardIds.length == values.length, "Arrays must be of the same size");
-        uint256[] memory ids;
-        uint256[] memory amounts;
+        uint256[] memory ids = new uint256[](cardIds.length);
+        uint256[] memory amounts = new uint256[](cardIds.length);
         for(uint i = 0; i < amounts.length; ++i) {
             ids[i] = _nextTokenID++;
             _valueOfCards[ids[i]] = values[i];
@@ -78,7 +78,7 @@ contract GoGBattlesCards is ERC1155, AccessControl, ERC1155Burnable {
     }
     
     function burnBatch(address owner, uint256[] memory ids) public onlyRole(COORDINATOR_ROLE) {
-        uint256[] memory amounts;
+        uint256[] memory amounts = new uint256[](ids.length);
         for(uint i = 0; i < ids.length; ++i) {
             amounts[i] = 1;
         }

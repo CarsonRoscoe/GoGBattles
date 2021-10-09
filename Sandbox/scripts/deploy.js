@@ -29,7 +29,11 @@ async function main() {
     roles: {
       COORDINATOR_ROLE : web3.utils.keccak256('COORDINATOR_ROLE'),
     },
-    isUpgradeable : false
+    isUpgradeable : false,
+    stablePairs: {
+      DAI : ['0x001B3B4d0F3714Ca98ba10F6042DaEbF0B1B7b6F', '0x639cB7b21ee2161DF9c882483C9D55c90c20Ca3e', 18],
+      USDC : ['0x2058A9D7613eEE744279e3856Ef0eAda5FCbaA7e', '0x2271e3Fef9e15046d09E1d78a8FF038c691E9Cf9', 6]
+    },
   }
 
   let dapp = {};
@@ -49,9 +53,9 @@ async function main() {
       console.info('Attempting to deploy ' + contractName);
 
       const GoGBattlesContract = await hre.ethers.getContractFactory(contractName);
-      
       const gogBattlesContract = await GoGBattlesContract.deploy(params.length > 0 ?{ arguments : params } : null);
       await gogBattlesContract.deployed();
+      
       dapp[contractName] = gogBattlesContract;
       addresses[contractName] = gogBattlesContract.address;
 
@@ -80,6 +84,8 @@ async function main() {
       case'GoGBattlesVault':
       await instance.functions.grantRole(config.roles.COORDINATOR_ROLE, dapp['GoGBattlesCoordinator'].address);
       await instance.functions.setPoolToken(dapp['GoGBattlesToken'].address);
+      await instance.functions.authorizeAToken( ... config.stablePairs.DAI );
+      await instance.functions.authorizeAToken( ... config.stablePairs.USDC );
         break;
       case'GoGBattlesCoordinator':
       await instance.functions.SetGoGBattlesContracts(dapp['GoGBattlesToken'].address, dapp['GoGBattlesCards'].address, dapp['GoGBattlesVault'].address, dapp['GoGBattlesMatchHistory'].address);

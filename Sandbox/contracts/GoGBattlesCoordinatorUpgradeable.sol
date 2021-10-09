@@ -177,7 +177,7 @@ contract GoGBattlesCoordinatorUpgradeable is AccessControlUpgradeable {
     // Core private functions
     function _depositStablecoinSafe(IERC20Upgradeable erc20, uint256 amount, address ercDepositer, address tokenReceiver ) private {
         // Take deposit
-        require(erc20.allowance(ercDepositer, address(this)) > amount, "Contract must be first allowed to transfer.");
+        require(erc20.allowance(ercDepositer, address(this)) >= amount, "Contract must be first allowed to transfer.");
         require(erc20.transferFrom(ercDepositer, address(this), amount), "Transfer to contract must succeed.");
         
         // Transfer deposit to vault and receive tokens
@@ -214,14 +214,14 @@ contract GoGBattlesCoordinatorUpgradeable is AccessControlUpgradeable {
     }
     
     function _withdrawStablecoinSafe(uint256 amount, address user, address erc20) private {
-        require(token.allowance(user, address(this)) > amount, "User must approve contract to withdraw token.");
+        require(token.allowance(user, address(this)) >= amount, "User must approve contract to withdraw token.");
         require(token.transferFrom(user, address(this), amount), "User must transfer token back to contract.");
         
         require(token.approve(address(token), amount), "Must be approved to burn token");
         token.burn(amount);
         
         require(vault.doesVaultTypeExist(erc20), "ERC20 is not a supported vault type.");
-        require(vault.balanceOfVaultNormalizedDecimals(address(erc20)) > amount, "Vault must be liquid");
+        require(vault.balanceOfVaultNormalizedDecimals(address(erc20)) >= amount, "Vault must be liquid");
         require(vault.withdrawNormalizedDecimals(user, amount, erc20), "Vault must withdraw desired token to user.");
     }
 }

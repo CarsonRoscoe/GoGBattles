@@ -120,7 +120,7 @@ contract GoGBattlesCoordinator is AccessControl {
     function distributeInterest() public ensureUserRegistered() {
         // Require there is at least $0.01 in the pool
         uint256 amount = vault.accruePendingInterest(); // 100, 110: 110
-        require(amount > 20, "There must be enough interest to collect that all parties get a share");
+        require(amount >= 20, "There must be enough interest to collect that all parties get a share");
         
         uint256 amountToPool = amount * 70 / 100; // 70% of interest goes into the reward pool
         uint256 amountToUsers = amount * 25 / 100; // 25% of interest goes back to users as token yield
@@ -169,7 +169,7 @@ contract GoGBattlesCoordinator is AccessControl {
     // Core private functions
     function _depositStablecoinSafe(IERC20 erc20, uint256 amount, address ercDepositer, address tokenReceiver ) private {
         // Take deposit
-        require(erc20.allowance(ercDepositer, address(this)) > amount, "Contract must be first allowed to transfer.");
+        require(erc20.allowance(ercDepositer, address(this)) >= amount, "Contract must be first allowed to transfer.");
         require(erc20.transferFrom(ercDepositer, address(this), amount), "Transfer to contract must succeed.");
         
         // Transfer deposit to vault and receive tokens
@@ -206,14 +206,14 @@ contract GoGBattlesCoordinator is AccessControl {
     }
     
     function _withdrawStablecoinSafe(uint256 amount, address user, address erc20) private {
-        require(token.allowance(user, address(this)) > amount, "User must approve contract to withdraw token.");
+        require(token.allowance(user, address(this)) >= amount, "User must approve contract to withdraw token.");
         require(token.transferFrom(user, address(this), amount), "User must transfer token back to contract.");
         
         require(token.approve(address(token), amount), "Must be approved to burn token");
         token.burn(amount);
         
         require(vault.doesVaultTypeExist(erc20), "ERC20 is not a supported vault type.");
-        require(vault.balanceOfVaultNormalizedDecimals(address(erc20)) > amount, "Vault must be liquid");
+        require(vault.balanceOfVaultNormalizedDecimals(address(erc20)) >= amount, "Vault must be liquid");
         require(vault.withdrawNormalizedDecimals(user, amount, erc20), "Vault must withdraw desired token to user.");
     }
 }

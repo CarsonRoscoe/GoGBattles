@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
 contract GoGBattlesToken is ERC20, ERC20Permit, ERC20Burnable, AccessControl {
     bytes32 public constant COORDINATOR_ROLE = keccak256("COORDINATOR_ROLE");
 
-    constructor() ERC20("GoGBattleToken", "GAME") ERC20Permit("GoGBattleToken") {
+    constructor() ERC20("GoGBattleToken", "GOGB") ERC20Permit("GoGBattleToken") {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(COORDINATOR_ROLE, msg.sender);
     }
