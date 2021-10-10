@@ -131,7 +131,7 @@ class Helpers {
     }
 
     getLoginState() {
-        if (signer == {}) {
+        if (provider.selectedAddress == null) {
             return 'Connect to MetaMask';
         } else if (provider.selectedAddress != null) {
             let address = provider.selectedAddress;
@@ -142,7 +142,7 @@ class Helpers {
                 address.substring(address.length - 4, address.length)
             );
         }
-        return '<unknown state>';
+        return '0x05F6...7b28';
     }
 
     getContracts() {
