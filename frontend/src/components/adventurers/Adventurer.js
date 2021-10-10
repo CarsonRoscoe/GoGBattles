@@ -120,7 +120,9 @@ const Adventurer = ({
                         {cards.map((card, i) => (
                             <div
                                 key={card.name}
-                                className={`${classes.cardWrapper} ${disableHover ? '' : classes.cardHover}`}
+                                className={`${classes.cardWrapper} ${
+                                    disableHover ? '' : classes.cardHover
+                                }`}
                                 style={{
                                     top: topOffset * (i + 1),
                                     right: rightOffset * (i + 1),

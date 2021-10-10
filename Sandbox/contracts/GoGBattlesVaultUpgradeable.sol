@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.2;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 interface ILendingPoolAddressesProvider {
     function getLendingPool() external view returns (address);
@@ -11,11 +14,11 @@ interface ILendingPoolAddressesProvider {
 }
 
 interface ILendingPool {
-    function deposit(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external;
-    function withdraw(address asset, uint256 amount, address to) external;
+    function deposit(address asset, uint256 amount, address onBehalfOf, uint16 referralCode ) external;
+    function withdraw( address asset, uint256 amount, address to) external returns (uint256);
 }
 
-contract GoGBattlesVault is AccessControl {
+contract GoGBattlesVaultUpgradeable is Initializable, AccessControlUpgradeable, UUPSUpgradeable {
     bytes32 public constant COORDINATOR_ROLE = keccak256("COORDINATOR_ROLE");
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
     bytes32 public constant TOKEN_GATEKEEPER_ROLE = keccak256("TOKEN_GATEKEEPER_ROLE");
@@ -40,22 +43,31 @@ contract GoGBattlesVault is AccessControl {
     ILendingPool lendingPool;
     ILendingPoolAddressesProvider provider;
     
-    constructor() {
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {}
+
+    function initialize() initializer public {
+        __AccessControl_init();
+        __UUPSUpgradeable_init();
+
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(COORDINATOR_ROLE, msg.sender);
         _setupRole(UPGRADER_ROLE, msg.sender);
         _setupRole(TOKEN_GATEKEEPER_ROLE, msg.sender);
         
         // Retrieve LendingPool address
-        // polygon:" 0xd05e3E715d945B59290df0ae8eF85c1BdB684744
-        // mumbai: 0x178113104fEcbcD7fF8669a0150721e231F0FD4B
-        provider = ILendingPoolAddressesProvider(address(0x178113104fEcbcD7fF8669a0150721e231F0FD4B)); // polygon address
-        lendingPool = ILendingPool(provider.getLendingPool());
+        //provider = ILendingPoolAddressesProvider(address(0xd05e3E715d945B59290df0ae8eF85c1BdB684744)); // polygon address
+        //lendingPool = ILendingPool(provider.getLendingPool());
     }
     
     function setPoolToken(address tokenAddress) public onlyRole(TOKEN_GATEKEEPER_ROLE) {
         require(address(IERC20(tokenAddress)) != address(0));
         poolTokenAddress = tokenAddress;
+    }
+    
+    
+    function _authorizeUpgrade(address newImplementation) internal onlyRole(UPGRADER_ROLE) override {
+        
     }
     
     function authorizeAToken(address token, address aToken, uint decimals) public onlyRole(TOKEN_GATEKEEPER_ROLE) {

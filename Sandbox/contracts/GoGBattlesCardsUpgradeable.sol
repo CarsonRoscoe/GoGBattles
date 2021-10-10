@@ -1,23 +1,25 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.2;
 
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155BurnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "./GoGBattlesCardFactory.sol";
 
 struct Card {
     uint backedValue;
 }
 
-contract GoGBattlesCards is ERC1155, AccessControl, ERC1155Burnable {
+contract GoGBattlesCardsUpgradeable is Initializable, ERC1155Upgradeable, AccessControlUpgradeable, ERC1155BurnableUpgradeable, UUPSUpgradeable {
     bytes32 public constant URI_SETTER_ROLE = keccak256("URI_SETTER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
     bytes32 public constant COORDINATOR_ROLE = keccak256("COORDINATOR_ROLE");
     
-    IERC20 _token;
+    IERC20Upgradeable _token;
     GoGBattlesCardFactory _factory;
     
     mapping(uint => uint) _valueOfCards;
@@ -26,16 +28,25 @@ contract GoGBattlesCards is ERC1155, AccessControl, ERC1155Burnable {
     uint _nextTokenID;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() ERC1155("https://guildsofgods.com/cards/") {
+    constructor() {}
+
+    function initialize() initializer public {
+        __ERC1155_init("https://guildsofgods.com/cards/");
+        __AccessControl_init();
+        __ERC1155Burnable_init();
+        __UUPSUpgradeable_init();
+
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(URI_SETTER_ROLE, msg.sender);
         _setupRole(MINTER_ROLE, msg.sender);
         _setupRole(UPGRADER_ROLE, msg.sender);
         _setupRole(COORDINATOR_ROLE, msg.sender);
     }
-
-    function setGoGBattlesTokenAndCardFactory(address gogBattlesToken, address gogBattlesCardFactory) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        _token = IERC20(gogBattlesToken);
+    
+    function setGoGBattlesToken(address gogBattlesToken) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _token = IERC20Upgradeable(gogBattlesToken);
+    }
+    function setGoGBattlesCardFactory(address gogBattlesCardFactory) public onlyRole(DEFAULT_ADMIN_ROLE) {
         _factory = GoGBattlesCardFactory(gogBattlesCardFactory);
     }
 
@@ -52,8 +63,8 @@ contract GoGBattlesCards is ERC1155, AccessControl, ERC1155Burnable {
 
     function mintBatch(address to, uint256[] memory cardIds, uint256[] memory values) public onlyRole(MINTER_ROLE) returns(uint256[] memory) {
         require(cardIds.length == values.length, "Arrays must be of the same size");
-        uint256[] memory ids = new uint256[](cardIds.length);
-        uint256[] memory amounts = new uint256[](cardIds.length);
+        uint256[] memory ids;
+        uint256[] memory amounts;
         for(uint i = 0; i < amounts.length; ++i) {
             ids[i] = _nextTokenID++;
             _valueOfCards[ids[i]] = values[i];
@@ -73,12 +84,14 @@ contract GoGBattlesCards is ERC1155, AccessControl, ERC1155Burnable {
         return (tokenIds, tokensRemaining);
     }
 
+    function _authorizeUpgrade(address newImplementation) internal onlyRole(UPGRADER_ROLE) override {}
+    
     function burnBatch(address owner, uint256[] memory ids, uint256[] memory amounts) public override onlyRole(COORDINATOR_ROLE) {
         super.burnBatch(owner, ids, amounts);
     }
     
     function burnBatch(address owner, uint256[] memory ids) public onlyRole(COORDINATOR_ROLE) {
-        uint256[] memory amounts = new uint256[](ids.length);
+        uint256[] memory amounts;
         for(uint i = 0; i < ids.length; ++i) {
             amounts[i] = 1;
         }
@@ -87,7 +100,7 @@ contract GoGBattlesCards is ERC1155, AccessControl, ERC1155Burnable {
 
     // The following functions are overrides required by Solidity.
 
-    function supportsInterface(bytes4 interfaceId) public view override(ERC1155, AccessControl) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view override(ERC1155Upgradeable, AccessControlUpgradeable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
     
