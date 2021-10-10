@@ -2,7 +2,7 @@
 import axios from 'axios';
 import Web3Manager  from './Web3Manager';
 import { BattleLogMessageType } from './game/Constants.js';
-import { BattleLog } from './game/BattleManager';
+import { BattleLog, BattleLogSimulator } from './game/BattleManager';
 
 
 const SERVER_URL = 'http://localhost:3093/';
@@ -37,6 +37,7 @@ const messageReferee = (apiExtension, callback, errorCallback, payload) => {
     // POST
     if (payload != null) {
         let postPromise = axios.post(url, payload, headers);
+        console.info('POST', url, payload);
         postPromise.then((response) => {
             console.log(response);
             // valiadtion checks
@@ -51,6 +52,7 @@ const messageReferee = (apiExtension, callback, errorCallback, payload) => {
     // GET
     else {
         let getPromise = axios.get(url, headers);
+        console.info('GET', url);
         getPromise.then((response) => {
             console.log({ data : response.data, status : response.status,  statusText : response.statusText, headers : response.headers, config : response.config });
             // valiadtion checks
@@ -66,23 +68,62 @@ const messageReferee = (apiExtension, callback, errorCallback, payload) => {
 
 let sampleData = {};
 
+let messages = [];
+let simulator = new BattleLogSimulator();
 
 class Web2Manager {
     isPlayerInQueueAsync(callback, errorResponse) {
-        return messageReferee('isPlayerInQueue', callback, errorResponse);
+        messageReferee('isPlayerInQueue', callback, errorResponse);
     }
 
     createBattle(callback, errorResponse, address) {
+        messageReferee('isPlayerInQueue', (lastValidation) => {
+            console.info(lastValidation);
+            // Load it into a battle log
+            let battleLog = new BattleLog();
+
+            // Play all the old moves
+
+
+            let data = {
+                player1Address: Web3Manager.getProvider().selectedAddress
+            };
+            battleLog.createLog(BattleLogMessageType.CREATE_BATTLE, data);
+
+
+            Web3Manager.signBattleLog(battleLog, (result) => {
+                console.info(battleLog,result );
+                simulator.addMessage(result.signatureObj.messages, result.signatureObj.address, result.signatureObj.signatureObj);
+                console.info(Web3Manager.verifyBattleLog(result.signatureObj));
+
+                messages.push(result.signatureObj.messages);
+    
+                // Just has last message
+                let payload = {
+                    signedBattleLog: {
+                        address: result.signatureObj.address,
+                        messages: messages,
+                        signature: result.signatureObj.signature
+                    }
+                }
+    
+                console.info("Signed!", payload);
+    
+                // WE HAVE 1 MESSAGE
+                // WE NEED MESSAGES
+                
+                messageReferee('createBattle', callback, errorResponse, payload );
+            });
+        }, (error)=> {
+
+            console.info(error);
+        })
+
+
         console.info(Web3Manager);
-        let battleLog = new BattleLog();
-        let data = {
-            player1Address: Web3Manager.getSigner().getAddress()
-        };
-        battleLog.createLog(BattleLogMessageType.CREATE_BATTLE, data);
-        Web3Manager.signBattleLog(battleLog, (result) => {
-            console.info("Signed!", result);
-            return messageReferee('createBattle', callback, errorResponse, result );
-        });
+
+
+
     }
 
     changeBattleTurn( turn, callback, errorResponse) {
@@ -91,8 +132,11 @@ class Web2Manager {
             battleTurn : turn
         }
         battleLog.createLog(BattleLogMessageType.CHANGE_BATTLE_TURN, data);
+
+        //
+
         Web3Manager.signBattleLog(battleLog, (result) => {
-            return messageReferee('changeBattleTurn', callback, errorResponse, result );
+            messageReferee('changeBattleTurn', callback, errorResponse, result );
         });
     }
 
@@ -103,7 +147,7 @@ class Web2Manager {
         };
         battleLog.createLog(BattleLogMessageType.CLAIM_WIN, data);
         Web3Manager.signBattleLog(battleLog, (result) => {
-            return messageReferee('claimWin', callback, errorResponse, result);
+            messageReferee('claimWin', callback, errorResponse, result);
         });
     }
 
@@ -114,7 +158,7 @@ class Web2Manager {
         }
         battleLog.createLog(BattleLogMessageType.SET_CARDS, data);
         Web3Manager.signBattleLog(battleLog, (result) => {
-            return messageReferee('changeAdventurerGear', callback, errorResponse, result);
+            messageReferee('changeAdventurerGear', callback, errorResponse, result);
         });
     }
 
@@ -125,7 +169,7 @@ class Web2Manager {
         };
         battleLog.createLog(BattleLogMessageType.JOIN_QUEUE, data);
         Web3Manager.signBattleLog(battleLog, (result) => {
-            return messageReferee('joinBattle', callback, errorResponse, result);
+            messageReferee('joinBattle', callback, errorResponse, result);
         });
     }
 }
