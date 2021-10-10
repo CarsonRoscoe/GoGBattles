@@ -315,58 +315,58 @@ let battleTurn = () => {
     }
 };
 
-setTimeout(() => {
-    let simulator = new BattleLogSimulator();
-    Web2Manager.createBattle((success, result) => {
-        console.info(success, result);
-        let battleLog = result.battleLog;
+// setTimeout(() => {
+//     let simulator = new BattleLogSimulator();
+//     Web2Manager.createBattle((success, result) => {
+//         console.info(success, result);
+//         let battleLog = result.battleLog;
         
-        console.info('Created battle.', success, battleLog);
-        simulator.addMessage(battleLog.messages[battleLog.length - 1], battleLog.address, battleLog.signature );
+//         console.info('Created battle.', success, battleLog);
+//         simulator.addMessage(battleLog.messages[battleLog.length - 1], battleLog.address, battleLog.signature );
 
-        // P2 joins P1 battle
-        Web2Manager.joinBattle((success, battleLog) => {
-            console.info('Joined battle.');
-            simulator.addMessage(battleLog.messages[battleLog.length - 1], battleLog.address, battleLog.signature );
+//         // P2 joins P1 battle
+//         Web2Manager.joinBattle((success, battleLog) => {
+//             console.info('Joined battle.');
+//             simulator.addMessage(battleLog.messages[battleLog.length - 1], battleLog.address, battleLog.signature );
 
-            // P1 picks his moves
-            Web2Manager.changeAdventurerGear({}, (success, battleLog) => {
-                console.info('Set gear');
-                simulator.addMessage(battleLog.messages[battleLog.length - 1], battleLog.address, battleLog.signature );
+//             // P1 picks his moves
+//             Web2Manager.changeAdventurerGear({}, (success, battleLog) => {
+//                 console.info('Set gear');
+//                 simulator.addMessage(battleLog.messages[battleLog.length - 1], battleLog.address, battleLog.signature );
 
-                // P2 picks his moves
-                Web2Manager.changeAdventurerGear({}, (success, battleLog) => {
-                    console.info('Set gear 2');
-                    simulator.addMessage(battleLog.messages[battleLog.length - 1], battleLog.address, battleLog.signature );
+//                 // P2 picks his moves
+//                 Web2Manager.changeAdventurerGear({}, (success, battleLog) => {
+//                     console.info('Set gear 2');
+//                     simulator.addMessage(battleLog.messages[battleLog.length - 1], battleLog.address, battleLog.signature );
 
-                    // P1 picks his moves
-                    Web2Manager.changeBattleTurn(battleTurn(), (success, battleLog) => {
-                        console.info('Picked moves');
-                        simulator.addMessage(battleLog.messages[battleLog.length - 1], battleLog.address, battleLog.signature );
+//                     // P1 picks his moves
+//                     Web2Manager.changeBattleTurn(battleTurn(), (success, battleLog) => {
+//                         console.info('Picked moves');
+//                         simulator.addMessage(battleLog.messages[battleLog.length - 1], battleLog.address, battleLog.signature );
 
-                        // P2 picks his moves
-                        Web2Manager.changeBattleTurn(battleTurn(), (success, battleLog) => {
-                            console.info('Picked moves')
-                            simulator.addMessage(battleLog.messages[battleLog.length - 1], battleLog.address, battleLog.signature );
-
-
-                            // P2 picks his moves
-                            Web2Manager.claimWin((success, battleLog) => {
-                                simulator.addMessage(battleLog.messages[battleLog.length - 1], battleLog.address, battleLog.signature );
-
-                                console.info(simulator);
+//                         // P2 picks his moves
+//                         Web2Manager.changeBattleTurn(battleTurn(), (success, battleLog) => {
+//                             console.info('Picked moves')
+//                             simulator.addMessage(battleLog.messages[battleLog.length - 1], battleLog.address, battleLog.signature );
 
 
-                            })
+//                             // P2 picks his moves
+//                             Web2Manager.claimWin((success, battleLog) => {
+//                                 simulator.addMessage(battleLog.messages[battleLog.length - 1], battleLog.address, battleLog.signature );
 
-                        })
-                    });
+//                                 console.info(simulator);
 
-                })
-            });
-        });
 
-    }, (error) => {
-        console.info("HELLO?");
-    }, Web3Manager.getProvider().selectedAddress);
-}, 10_000);
+//                             })
+
+//                         })
+//                     });
+
+//                 })
+//             });
+//         });
+
+//     }, (error) => {
+//         console.info("HELLO?");
+//     }, Web3Manager.getProvider().selectedAddress);
+// }, 10_000);
