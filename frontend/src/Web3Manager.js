@@ -81,6 +81,7 @@ let accounts = [];
 let selectedAccountID = 0;
 let signaturePromise = null;
 
+
 class Helpers {
     async connectAsync(then) {
         console.info('Connecting');
@@ -158,17 +159,17 @@ class Helpers {
 
     sign(message, callback) {
         if (signer != null) {
-            signer.getAddress().then((address) => {
-                let messageCleaned = this.sanitizeMessage(message);
-                signer.signMessage(messageCleaned).then((result) => {
-                    callback({
-                        address:  address,
-                        message: messageCleaned,
-                        signature: result,
-                    });
-                }).catch((error) => {
-                    console.info(error);
+            let address = provider.selectedAddress;
+            let messageCleaned = this.sanitizeMessage(message);
+            console.info(messageCleaned, signer);
+            signer.signMessage(messageCleaned).then((result) => {
+                callback({
+                    address:  address,
+                    messages: JSON.parse(messageCleaned),
+                    signature: result,
                 });
+            }).catch((error) => {
+                console.info(error);
             });
         }
         else {
@@ -192,7 +193,7 @@ class Helpers {
             if (value != null) 
                 return value;
         });
-        console.info(msg);
+        console.info(message, msg);
         return msg;
     }
 
