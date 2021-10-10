@@ -95,14 +95,12 @@ class Web2Manager {
                 console.info(battleLog,result );
                 simulator.addMessage(result.signatureObj.messages, result.signatureObj.address, result.signatureObj.signatureObj);
                 console.info(Web3Manager.verifyBattleLog(result.signatureObj));
-
-                messages.push(result.signatureObj.messages);
     
                 // Just has last message
                 let payload = {
                     signedBattleLog: {
                         address: result.signatureObj.address,
-                        messages: messages,
+                        messages: result.signatureObj.messages,
                         signature: result.signatureObj.signature
                     }
                 }
