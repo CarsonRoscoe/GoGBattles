@@ -39,8 +39,8 @@ let payload = {
             ]
         }
     },
-    apiKey : 'J5KKk4DRohLECas2ZgaASJjHGRZ1hwWr',
-    apiSecret : '2C7ERBhBcHnDTrRAUpy9FNBwgAuGV6LWc7CLE1dwxgcJbmET4hqFdA6zwrd5JsDB'
+    apiKey : process.env.API_KEY,
+    apiSecret : process.env.API_SECRET
 };
 
 RefereeAutoTask.handler(payload).then((r) => {
