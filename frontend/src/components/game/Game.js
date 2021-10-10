@@ -13,6 +13,12 @@ import { cardSizes } from '../cards/Card';
 // test-data
 import { getTestCards } from '../../test-data/cards';
 
+import battleManagerInstance, { BattleLog, BattleLogSimulator } from '../../game/BattleManager';
+import { BattleTurn } from '../../game/BattleTurn.js';
+import { BattleLogMessageType, BattleMove } from '../../game/Constants.js';
+import Web3Manager from '../../Web3Manager';
+import Web2Manager from '../../Web2Manager';
+
 const useGameStyles = createUseStyles({
     buttonWrapper: {
         display: 'flex',
@@ -94,6 +100,10 @@ const getGameSizes = (width) => {
     return { cardSize, adventurerSize };
 };
 
+
+
+const gameTurns = [];
+
 const Game = () => {
     const classes = useGameStyles();
 
@@ -107,6 +117,22 @@ const Game = () => {
     const [moveOrder, setMoveOrder] = useState([]);
     // adventurer state
     const [adventurerState, adventurerDispatch] = useReducer(adventurersReducer, adventurersInitialState);
+
+    const battleSimulator = battleManagerInstance.getBattleSimulator();
+    console.info(battleSimulator);
+    let updateBattleSimulation = (signedBattleLog) => {
+        console.info(battleSimulator);
+        if (Web3Manager.verifyBattleLog(signedBattleLog)) {
+            let lastMessage = signedBattleLog.getLastMessage();
+            if (!battleSimulator.addMessage(lastMessage, signedBattleLog.address, signedBattleLog.signature)) {
+                console.info("Failed to upload battle log", signedBattleLog);
+            }
+        }
+        else {
+            console.info("Failed to verify battle log", signedBattleLog);
+        }
+    }
+
 
     // refs @TODO try and clean up refs
     const adventurer1Ref = useRef(null);
@@ -303,31 +329,73 @@ const Game = () => {
     };
 
     const endTurn = () => {
+        const defaultTurnMessage = {"counter":0,"listeners":[],"messages":[],"needsSignature":false,"address":null,"signature":null};
         const turn = {
             adventurers: {
-                adventurer1: {
+                '0': {
                     target: adventurerState.adventurer1.target,
                     cards: adventurerState.adventurer1.cards
                 },
-                adventurer2: {
+                '1': {
                     target: adventurerState.adventurer2.target,
                     cards: adventurerState.adventurer2.cards
                 },
-                adventurer3: {
+                '2': {
                     target: adventurerState.adventurer3.target,
                     cards: adventurerState.adventurer3.cards
                 },
-                adventurer4: {
+                '3': {
                     target: adventurerState.adventurer4.target,
                     cards: adventurerState.adventurer4.cards
                 },
-                adventurer5: {
+                '4': {
                     target: adventurerState.adventurer5.target,
                     cards: adventurerState.adventurer5.cards
                 }
             },
             moveOrder
         };
+
+
+        let battleLog = new BattleLog().fromJSON(defaultTurnMessage);
+        let battleTurn = new BattleTurn();
+
+        for(let i = 0; i < turn.moveOrder.length; i++){
+            let advID = turn.moveOrder[i];
+            let move = null
+            // NOTE: 'Strongest' and 'Weakest' are also viable attack option
+            switch(turn.adventurer[advID].target) {
+                case 0:
+                    move = BattleMove.ATTACK_ADV0;
+                    break;
+                case 1:
+                    move = BattleMove.ATTACK_ADV1;
+                    break;
+                case 2:
+                    move = BattleMove.ATTACK_ADV2;
+                    break;
+                case 3:
+                    move = BattleMove.ATTACK_ADV3;
+                    break;
+                case 4:
+                    move = BattleMove.ATTACK_ADV4;
+                    break;
+                default:
+                    move = BattleMove.ATTACK_ADV0;
+                    break;
+            }
+
+            battleTurn.advOrder[i] = advID;
+            battleTurn.advMoves[i]= move;
+        }
+        battleLog.createLog(BattleLogMessageType.CHANGE_BATTLE_TURN, {
+            battleTurn,
+        });
+        Web3Manager.signBattleLog(battleLog, (signData) => {
+            gameTurns.push(signData);
+            // 
+            console.info({signedBattleLog: signData.battleLog.toJSON()});
+        });
 
         console.log('turn', turn);
 
@@ -477,3 +545,7 @@ const Game = () => {
 };
 
 export default Game;
+
+
+
+

@@ -7,10 +7,13 @@ import Card from '../cards/Card';
 import Button from '../inputs/Button';
 import useWindowDimensions from '../../hooks/useWindowDimensions';
 import { cardSizes } from '../cards/Card';
-import web3Helpers from '../../web3Helpers';
+import Web3Manager from '../../Web3Manager';
+import Web2Manager from '../../Web2Manager';
 import { TransferTokenModalContent, TransferCardModalContent, BurnTokenForStablecoinModalContent, BurnCardForTokenModalContent, MintCardPackModalContent } from './Modals';
+import battleManagerInstance, { BattleLog, BattleLogSimulator } from '../../game/BattleManager';
 
 import Modal from '@mui/material/Modal';
+import { BattleLogMessageType } from '../../game/Constants';
 
 const useLobbyStyles = createUseStyles({
     container: {
@@ -98,15 +101,30 @@ const Lobby = () => {
     const [isBurnTokenForStablecoinModalOpen, setIsBurnTokenForStablecoinModalOpen] = useState(false);
     const [isBurnCardForTokenModalOpen, setIsBurnCardForTokenModalOpen] = useState(false);
     const [isMintCardPackModalOpen, setIsMintCardPackModalOpen] = useState(false);
-    const [metaMaskButtonText, setMetaMaskButtonText] = useState(web3Helpers.getLoginState());
+    const [metaMaskButtonText, setMetaMaskButtonText] = useState(Web3Manager.getLoginState());
     const [tokenBalance, setTokenBalance] = useState(0);
     const [backedBalance, setBackedBalance] = useState(0);
 
+    const [isInGame, setIsInGame] = useState(false);
+    const [isWaitingForGame, setIsWaitingForGame] = useState(false);
+    const [enemyName, setEnemyName] = useState('Waiting for a player to connect...');
+    const [startBattleText, setStartBattleText] = useState('Start Battle');
+    
+
+    Web2Manager.isPlayerInQueueAsync((isPlayerInQueueResult) => {
+        if (isPlayerInQueueResult) {
+            setStartBattleText('Join Battle');
+        }
+        else {
+            setStartBattleText('Create Battle');
+        }
+    });
+
     let refreshBalances = () => {
-        web3Helpers.contracts.Token.methods.balanceOf(web3Helpers.getProvider().selectedAddress).call().then((balanceStr) => {
+        Web3Manager.contracts.Token.methods.balanceOf(Web3Manager.getSigner().getAddress()).call().then((balanceStr) => {
             let balance = Number.parseFloat(balanceStr);
             setTokenBalance(balance);
-            web3Helpers.contracts.Cards.methods.backingBalanceOf(web3Helpers.getProvider().selectedAddress).call().then((cardValueStr) => {
+            Web3Manager.contracts.Cards.methods.backingBalanceOf(Web3Manager.getSigner().getAddress()).call().then((cardValueStr) => {
                 let cardValue = Number.parseFloat(cardValueStr);
                 setBackedBalance(balance + cardValue);
             }).catch((e) => {
@@ -119,16 +137,35 @@ const Lobby = () => {
 
     const { cardSize } = getLobbySizes(width);
 
-    const findGame = () => {
-        // @TODO find match and then route
-        history.push('/play');
-    };
+      const onPlay = () => {
+        console.info('[Start Battle]');
+        Web2Manager.isPlayerInQueueAsync((isPlayerInQueueResult) => {
+            console.info('isPlayerInQueueAsync: ', isPlayerInQueueResult);
+            if (isPlayerInQueueResult) {
+                Web2Manager.joinBattle((joinBattleResult) => {
+                    console.info('joinBattle: ', joinBattleResult);
+                    setIsInGame(true);
+                    setEnemyName(joinBattleResult);
+                    battleManagerInstance.createBattleSimulator(joinBattleResult);
+                    history.push('/play');
+                });
+            } else {
+                Web2Manager.createBattle(((createBattleResult) => {
+                    console.info('createBattle: ', createBattleResult);
+                    console.info(createBattleResult);
+                    setIsWaitingForGame(true);
+                    battleManagerInstance.createBattleSimulator(createBattleResult);
+                    history.push('/play');
+                }));
+            }
+        });
+    }
 
     return (
         <div className={classes.container}>
             <div className={classes.top}>
                 <div className={classes.left}>
-                    <Button color="indianred" textColor="white" text="Find Game" onClick={findGame} />
+                    <Button color="indianred" textColor="white" text={startBattleText} onClick={onPlay} />
                 </div>
                 <div className={classes.middle}>
                     {selectedCardIndex >= 0 && (
@@ -165,9 +202,9 @@ const Lobby = () => {
                         textColor="white"
                         text={metaMaskButtonText}
                         onClick={() => {
-                            web3Helpers.connectAsync((res) => {
+                            Web3Manager.connectAsync((res) => {
                                 setMetaMaskButtonText(
-                                    web3Helpers.getLoginState()
+                                    Web3Manager.getLoginState()
                                 );
                                 refreshBalances();
                             });
@@ -254,3 +291,82 @@ const Lobby = () => {
 };
 
 export default Lobby;
+
+
+let battleTurn = () => {
+    return {
+        battleTurn : {
+            advOrder : [
+                0,
+                1,
+                2,
+                3,
+                4
+            ],
+            advMoves: [
+                "ATTACK_ADV0",
+                "ATTACK_ADV1",
+                "ATTACK_ADV2",
+                "ATTACK_ADV3",
+                "ATTACK_ADV4"
+            ],
+            readyForNextTurn: true
+        }
+    }
+};
+
+setTimeout(() => {
+    let simulator = new BattleLogSimulator();
+    Web2Manager.createBattle((success, result) => {
+        console.info(success, result);
+        let battleLog = result.battleLog;
+        
+        console.info('Created battle.', success, battleLog);
+        simulator.addMessage(battleLog.message, battleLog.address, battleLog.signature );
+
+        // P2 joins P1 battle
+        Web2Manager.joinBattle((success, battleLog) => {
+            console.info('Joined battle.');
+            simulator.addMessage(battleLog.message, battleLog.address, battleLog.signature );
+
+            // P1 picks his moves
+            Web2Manager.changeAdventurerGear({}, (success, battleLog) => {
+                console.info('Set gear');
+                simulator.addMessage(battleLog.message, battleLog.address, battleLog.signature );
+
+                // P2 picks his moves
+                Web2Manager.changeAdventurerGear({}, (success, battleLog) => {
+                    console.info('Set gear 2');
+                    simulator.addMessage(battleLog.message, battleLog.address, battleLog.signature );
+
+                    // P1 picks his moves
+                    Web2Manager.changeBattleTurn(battleTurn(), (success, battleLog) => {
+                        console.info('Picked moves');
+                        simulator.addMessage(battleLog.message, battleLog.address, battleLog.signature );
+
+                        // P2 picks his moves
+                        Web2Manager.changeBattleTurn(battleTurn(), (success, battleLog) => {
+                            console.info('Picked moves')
+                            simulator.addMessage(battleLog.message, battleLog.address, battleLog.signature );
+
+
+                            // P2 picks his moves
+                            Web2Manager.claimWin((success, battleLog) => {
+                                simulator.addMessage(battleLog.message, battleLog.address, battleLog.signature );
+
+                                console.info(simulator);
+
+
+                            })
+
+                        })
+                    });
+
+                })
+            });
+        });
+
+    }, (error) => {
+        console.info("HELLO?");
+    }, Web3Manager.getProvider().selectedAddress);
+}, 10_000);

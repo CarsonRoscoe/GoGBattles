@@ -4,7 +4,7 @@ import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
-import Web3Helper from '../../web3Helpers';
+import Web3Manager from '../../Web3Manager';
 
 const style = {
     position: 'absolute',
@@ -52,11 +52,11 @@ export const TransferTokenModalContent = React.forwardRef((props, ref) => {
                         <Button
                             onClick={() => {
                                 console.log(to, amount);
-                                let web3 = Web3Helper.getWeb3();
+                                let web3 = Web3Manager.getWeb3();
                                 if (web3.utils.isAddress(to)) {
                                     let parsed = Number.parseFloat(amount);
                                     if (!Number.isNaN(parsed)) {
-                                        Web3Helper.contracts.Token.methods.transfer(to, parsed).send(Web3Helper.getSendOptions());
+                                        Web3Manager.contracts.Token.methods.transfer(to, parsed).send(Web3Manager.getSendOptions());
                                     }
                                     else {
                                         window.alert('Please input a valid amount.');
@@ -110,11 +110,11 @@ export const TransferCardModalContent = React.forwardRef((props, ref) => {
                         <Button
                             onClick={() => {
                                 console.log(to, tokenID);
-                                let web3 = Web3Helper.getWeb3();
+                                let web3 = Web3Manager.getWeb3();
                                 if (web3.utils.isAddress(to)) {
                                     let parsed = Number.parseFloat(tokenID);
                                     if (!Number.isNaN(parsed)) {
-                                        Web3Helper.contracts.Cards.methods.safeTransferFrom(Web3Helper.getProvider().selectedAddress, to, parsed, 1, "0x0").send(Web3Helper.getSendOptions());
+                                        Web3Manager.contracts.Cards.methods.safeTransferFrom(Web3Manager.getSigner().getAddress(), to, parsed, 1, "0x0").send(Web3Manager.getSendOptions());
                                     }
                                     else {
                                         window.alert('Please input a valid amount.');
@@ -159,10 +159,10 @@ export const BurnCardForTokenModalContent = React.forwardRef((props, ref) => {
                         <Button
                             onClick={() => {
                                 console.log(tokenId);
-                                let web3 = Web3Helper.getWeb3();
+                                let web3 = Web3Manager.getWeb3();
                                 let parsed = Number.parseFloat(tokenId);
                                 if (!Number.isNaN(parsed)) {
-                                    Web3Helper.contracts.Coordinator.methods.burnCards([tokenId]).send(Web3Helper.getSendOptions()).then((res) => {
+                                    Web3Manager.contracts.Coordinator.methods.burnCards([tokenId]).send(Web3Manager.getSendOptions()).then((res) => {
                                         console.info(res);
                                     }).catch((e) => {
                                         console.info(e);
@@ -216,13 +216,13 @@ export const MintCardPackModalContent = React.forwardRef((props, ref) => {
                         <Button
                             onClick={() => {
                                 console.log(amount, stablecoinAddress);
-                                let web3 = Web3Helper.getWeb3();
+                                let web3 = Web3Manager.getWeb3();
                                 let parsed = Number.parseFloat(amount);
 
                                 if (web3.utils.isAddress(stablecoinAddress)) {
                                     let parsed = Number.parseFloat(amount);
                                     if (!Number.isNaN(parsed)) {
-                                        Web3Helper.contracts.Coordinator.methods.mintCards(stablecoinAddress, parsed).send(Web3Helper.getSendOptions()).then((res) => {
+                                        Web3Manager.contracts.Coordinator.methods.mintCards(stablecoinAddress, parsed).send(Web3Manager.getSendOptions()).then((res) => {
                                             console.info("Deposit & mint cards", res);
                                         }).catch((e) => {
                                             console.info(e);
@@ -272,9 +272,9 @@ export const BurnTokenForStablecoinModalContent = React.forwardRef((props, ref) 
                             onClick={() => {
                                 let parsed = Number.parseFloat(amount);
                                 if (!Number.isNaN(parsed)) {
-                                    console.info(Web3Helper.contracts.Token.methods);
-                                    Web3Helper.contracts.Token.methods.approve(Web3Helper.contracts.Coordinator._address, parsed).send(Web3Helper.getSendOptions()).then((res) => {
-                                        Web3Helper.contracts.Coordinator.methods.burnToken(parsed, Web3Helper.contracts.USDC._address).send(Web3Helper.getSendOptions()).then((res) => {
+                                    console.info(Web3Manager.contracts.Token.methods);
+                                    Web3Manager.contracts.Token.methods.approve(Web3Manager.contracts.Coordinator._address, parsed).send(Web3Manager.getSendOptions()).then((res) => {
+                                        Web3Manager.contracts.Coordinator.methods.burnToken(parsed, Web3Manager.contracts.USDC._address).send(Web3Manager.getSendOptions()).then((res) => {
                                             console.info("Success!");
                                         }).catch((e) => {
                                             console.info('ERROR', e);
