@@ -41,4 +41,3 @@ We also deployed our front-end to Sia/Skynet/Homescreen, and created a ENS gogba
 /Defender contains the "Referee" logic in OpenZeppelin's Defender tool. See Defender/DefenderAutoTask/RefereeJustMatch.js for implementation.
 
 /GoG-Battles contains the pseudo-server used for players to communicate through while a game is in session.
-
