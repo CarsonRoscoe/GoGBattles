@@ -10,7 +10,7 @@ import "../interfaces/Token.sol";
 contract GoGBattlesToken_V1 is Token, ERC20, ERC20Permit, ERC20Burnable, AccessControl {
     bytes32 public constant COORDINATOR_ROLE = keccak256("COORDINATOR_ROLE");
 
-    constructor() ERC20("GoGBattleToken", "GOGB") ERC20Permit("GoGBattleToken") {
+    constructor() ERC20("GoG: Battles' Token", "GOGB") ERC20Permit("GoGBattleToken") {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(COORDINATOR_ROLE, msg.sender);
     }

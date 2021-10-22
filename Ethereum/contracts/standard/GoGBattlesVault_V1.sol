@@ -4,17 +4,7 @@ pragma solidity ^0.8.3;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/Vault.sol";
-
-interface ILendingPoolAddressesProvider {
-    function getLendingPool() external view returns (address);
-    function setLendingPoolImpl(address pool) external;
-    function getLendingPoolConfigurator() external view returns (address);
-}
-
-interface ILendingPool {
-    function deposit(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external;
-    function withdraw(address asset, uint256 amount, address to) external;
-}
+import "../interfaces/AAVEInterface.sol";
 
 contract GoGBattlesVault_V1 is Vault, AccessControl {
     bytes32 public constant COORDINATOR_ROLE = keccak256("COORDINATOR_ROLE");
@@ -50,8 +40,8 @@ contract GoGBattlesVault_V1 is Vault, AccessControl {
         // Retrieve LendingPool address
         // polygon:" 0xd05e3E715d945B59290df0ae8eF85c1BdB684744
         // mumbai: 0x178113104fEcbcD7fF8669a0150721e231F0FD4B
-        provider = ILendingPoolAddressesProvider(address(0x178113104fEcbcD7fF8669a0150721e231F0FD4B)); // polygon address
-        lendingPool = ILendingPool(provider.getLendingPool());
+        // provider = ILendingPoolAddressesProvider(address(0x178113104fEcbcD7fF8669a0150721e231F0FD4B)); // polygon address
+        // lendingPool = ILendingPool(provider.getLendingPool());
     }
     
     function setPoolToken(address tokenAddress) public override onlyRole(TOKEN_GATEKEEPER_ROLE) {
