@@ -7,15 +7,14 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "../interfaces/MatchHistory.sol";
 
 /**
  * @title Storage
  * @dev Store & retrieve value in a variable
  */
-contract GoGBattlesMatchHistory is AccessControl {
+contract GoGBattlesMatchHistory_V1 is MatchHistory, AccessControl {
     bytes32 public constant COORDINATOR_ROLE = keccak256("COORDINATOR_ROLE");
-    
-    event Match(uint256 matchID, address winner, address loser, uint256 timestamp, string ipfs);
     
     uint256 _nextMatchID;
     
@@ -29,7 +28,7 @@ contract GoGBattlesMatchHistory is AccessControl {
         _nextMatchID = 1;
     }
     
-    function publishMatch(address winner, address loser, uint256 timestamp, string memory ipfs) onlyRole(COORDINATOR_ROLE) public {
+    function publishMatch(address winner, address loser, uint256 timestamp, string memory ipfs) onlyRole(COORDINATOR_ROLE) public override {
         require(matchIDLookup[ipfs] == 0);
         uint256 matchID = _nextMatchID++;
         ipfsLookup[matchID] = ipfs;

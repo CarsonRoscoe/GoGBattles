@@ -36,7 +36,7 @@ We also deployed our front-end to Sia/Skynet/Homescreen, and created a ENS gogba
 
 /frontend contains the front-end code.
 
-/Sandbox contains the Solidity contracts, compilations and deployment scripts. 
+/Ethereum contains the Hardhat Solidity contracts, compilations, tests and deployment scripts. 
 
 /Defender contains the "Referee" logic in OpenZeppelin's Defender tool. See Defender/DefenderAutoTask/RefereeJustMatch.js for implementation.
 
