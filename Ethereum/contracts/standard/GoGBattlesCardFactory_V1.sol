@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.3;
 
-import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "../interfaces/CardFactory.sol";
 
-
-contract GoGBattlesCardFactory {
+contract GoGBattlesCardFactory_V1 is CardFactory {
     uint[] _cardValues;
     uint[] _cardRollChances;
     uint _smallestCardValue;
@@ -20,7 +20,7 @@ contract GoGBattlesCardFactory {
         registerCard(10000000, 10000000);
     }
     
-    function registerCards(uint[] memory cardValues, uint[] memory rollChances) public returns(uint256[] memory) {
+    function registerCards(uint[] memory cardValues, uint[] memory rollChances) public override returns(uint256[] memory) {
         require(cardValues.length == rollChances.length);
         uint[] memory result = new uint[](cardValues.length);
         for(uint i = 0; i < cardValues.length; ++i) {
@@ -46,7 +46,7 @@ contract GoGBattlesCardFactory {
         return result;
     }
     
-    function registerCard(uint cardValue, uint rollChance) public returns(uint256) {
+    function registerCard(uint cardValue, uint rollChance) public override returns(uint256) {
         _cardValues.push(cardValue);
         _cardRollChances.push(rollChance);
         if (_cardValues.length == 0 || cardValue < _smallestCardValue) {
@@ -60,7 +60,7 @@ contract GoGBattlesCardFactory {
         return _cardValues.length - 1;
     }
     
-    function rollCards(uint256 availableBacking) public returns (uint256[] memory, uint256[] memory, uint256) {
+    function rollCards(uint256 availableBacking) public override returns (uint256[] memory, uint256[] memory, uint256) {
         uint256 tokensLeft = availableBacking;
         uint tokensAwarded = 0;
         

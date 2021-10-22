@@ -1,24 +1,17 @@
-/**
- *Submitted for verification at polygonscan.com on 2021-09-27
-*/
-
-// SPDX-License-Identifier: GPL-3.0
-
-pragma solidity >=0.7.0 <0.9.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.3;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./GoGBattlesToken.sol";
-import "./GoGBattlesCards.sol";
-import "./GoGBattlesVault.sol";
-import "./GoGBattlesMatchHistory.sol";
+import "../interfaces/Token.sol";
+import "../interfaces/Cards.sol";
+import "../interfaces/Vault.sol";
+import "../interfaces/MatchHistory.sol";
+import "../interfaces/Coordinator.sol";
 
-contract GoGBattlesCoordinator is AccessControl {
+contract GoGBattlesCoordinator_V1 is Coordinator, AccessControl {
     bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
     bytes32 public constant REFEREE_ROLE = keccak256("REFEREE_ROLE");
-    
-    event MintCards(address minter, uint[] tokenIds);
-    event BurnCards(address burner, uint[] tokenIds);
     
     uint _devTokenFund;
     uint _usersTokenFund;
@@ -26,10 +19,10 @@ contract GoGBattlesCoordinator is AccessControl {
     mapping(address => uint256) _userByIds;
     address[] _users;
     
-    GoGBattlesToken token;
-    GoGBattlesCards cards;
-    GoGBattlesVault vault;
-    GoGBattlesMatchHistory matchHistory;
+    Token token;
+    Cards cards;
+    Vault vault;
+    MatchHistory matchHistory;
     
     constructor() {
         _devTokenFund = 0;
@@ -51,28 +44,37 @@ contract GoGBattlesCoordinator is AccessControl {
         }
         _;
     }
-    
-    function SetGoGBattlesContracts(address tokenAddress, address cardsAddress, address vaultAddress, address matchHistoryAddress) public onlyRole(OWNER_ROLE) {
-        token = GoGBattlesToken(tokenAddress);
+
+    function SetGoGBattlesToken(address tokenAddress) public override {
+        token = Token(tokenAddress);
         require(address(token) != address(0), "Token address must be set.");
-        cards = GoGBattlesCards(cardsAddress);
+    }
+
+    function SetGoGBattlesCards(address cardsAddress) public override {
+        cards = Cards(cardsAddress);
         require(address(cards) != address(0), "Cards address must be set.");
-        vault = GoGBattlesVault(vaultAddress);
+    }
+
+    function SetGoGBattlesVault(address vaultAddress) public override {
+        vault = Vault(vaultAddress);
         require(address(vault) != address(0), "Vault address must be set.");
-        matchHistory = GoGBattlesMatchHistory(matchHistoryAddress);
+    }
+
+    function SetGoGBattlesMatchHistory(address matchHistoryAddress) public override {
+        matchHistory = MatchHistory(matchHistoryAddress);
         require(address(matchHistoryAddress) != address(0), "Match history address must be set.");
     }
-    
+
     // Public interactable methods
     
     // User claims a match occured
-    function claimMatchOccured(string calldata ipfs) public ensureUserRegistered() returns(bool) {
+    function claimMatchOccured(string calldata ipfs) public override ensureUserRegistered() returns(bool) {
         // May emit   
         return true;
     }
     
     // Referee posts match history and gives rewards
-    function publishMatch(address winner, address loser, uint256 timestamp, string calldata ipfs) onlyRole(REFEREE_ROLE) public {
+    function publishMatch(address winner, address loser, uint256 timestamp, string calldata ipfs) onlyRole(REFEREE_ROLE) public override {
         matchHistory.publishMatch(winner, loser, timestamp, ipfs);
         uint256 poolSize = vault.poolSize();
         uint256 prizeSize = poolSize / 100;
@@ -85,7 +87,7 @@ contract GoGBattlesCoordinator is AccessControl {
     }
     
     // Deposit into a vault and mint cards
-    function mintCards(address vaultType, uint256 amount) public ensureUserRegistered() returns(uint256[] memory) {
+    function mintCards(address vaultType, uint256 amount) public override ensureUserRegistered() returns(uint256[] memory) {
         IERC20 erc20 = IERC20(vaultType);
         require(address(erc20) != address(0), "Passed in vaultType must be a valid ERC20.");
         _depositStablecoinSafe(erc20, amount, msg.sender, address(this));
@@ -94,22 +96,22 @@ contract GoGBattlesCoordinator is AccessControl {
     }
     
     
-    function burnCards(uint256[] calldata tokenIds) public ensureUserRegistered() {
+    function burnCards(uint256[] calldata tokenIds) public override ensureUserRegistered() {
         _burnCardsForTokenSafe(tokenIds, msg.sender);
     }
     
-    function burnToken(uint256 amount, address erc20) public ensureUserRegistered() {
+    function burnToken(uint256 amount, address erc20) public override ensureUserRegistered() {
         _withdrawStablecoinSafe(amount, msg.sender, erc20);
     }
     
-    function claimGameInterest() public ensureUserRegistered() {
+    function claimGameInterest() public override ensureUserRegistered() {
         // uint256 gameFromCards = GoGBattleCards.getGameValues(msg.sender);
         // uint256 gameBalance = GoGBattleGAME.balanceOf(msg.sender);
         // uint256 interest = AAVEVault.claimInterestAsGAME(msg.sender);
         // returns interest
     }
     
-    function claim() public ensureUserRegistered() {
+    function claim() public override ensureUserRegistered() {
         uint userFundSupply = _usersTokenFund; 
         uint totalSupply = token.totalSupply();
         uint userSupply = token.balanceOf(msg.sender) + cards.backingBalanceOf(msg.sender);
@@ -117,7 +119,7 @@ contract GoGBattlesCoordinator is AccessControl {
         
     }
     
-    function distributeInterest() public ensureUserRegistered() {
+    function distributeInterest() public override ensureUserRegistered() {
         // Require there is at least $0.01 in the pool
         uint256 amount = vault.accruePendingInterest(); // 100, 110: 110
         require(amount >= 20, "There must be enough interest to collect that all parties get a share");
@@ -210,7 +212,7 @@ contract GoGBattlesCoordinator is AccessControl {
         require(token.transferFrom(user, address(this), amount), "User must transfer token back to contract.");
         
         require(token.approve(address(token), amount), "Must be approved to burn token");
-        token.burn(amount);
+        token.burnFrom(user, amount);
         
         require(vault.doesVaultTypeExist(erc20), "ERC20 is not a supported vault type.");
         require(vault.balanceOfVaultNormalizedDecimals(address(erc20)) >= amount, "Vault must be liquid");

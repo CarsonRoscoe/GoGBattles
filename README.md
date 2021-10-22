@@ -42,4 +42,3 @@ We also deployed our front-end to Sia/Skynet/Homescreen, and created a ENS gogba
 
 /GoG-Battles contains the pseudo-server used for players to communicate through while a game is in session.
 
-/Servers

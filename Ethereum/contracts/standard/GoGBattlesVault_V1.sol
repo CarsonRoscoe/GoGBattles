@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.3;
 
-import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "../interfaces/Vault.sol";
 
 interface ILendingPoolAddressesProvider {
     function getLendingPool() external view returns (address);
@@ -14,11 +12,11 @@ interface ILendingPoolAddressesProvider {
 }
 
 interface ILendingPool {
-    function deposit(address asset, uint256 amount, address onBehalfOf, uint16 referralCode ) external;
-    function withdraw( address asset, uint256 amount, address to) external returns (uint256);
+    function deposit(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external;
+    function withdraw(address asset, uint256 amount, address to) external;
 }
 
-contract GoGBattlesVaultUpgradeable is Initializable, AccessControlUpgradeable, UUPSUpgradeable {
+contract GoGBattlesVault_V1 is Vault, AccessControl {
     bytes32 public constant COORDINATOR_ROLE = keccak256("COORDINATOR_ROLE");
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
     bytes32 public constant TOKEN_GATEKEEPER_ROLE = keccak256("TOKEN_GATEKEEPER_ROLE");
@@ -43,34 +41,25 @@ contract GoGBattlesVaultUpgradeable is Initializable, AccessControlUpgradeable, 
     ILendingPool lendingPool;
     ILendingPoolAddressesProvider provider;
     
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {}
-
-    function initialize() initializer public {
-        __AccessControl_init();
-        __UUPSUpgradeable_init();
-
+    constructor() {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(COORDINATOR_ROLE, msg.sender);
         _setupRole(UPGRADER_ROLE, msg.sender);
         _setupRole(TOKEN_GATEKEEPER_ROLE, msg.sender);
         
         // Retrieve LendingPool address
-        //provider = ILendingPoolAddressesProvider(address(0xd05e3E715d945B59290df0ae8eF85c1BdB684744)); // polygon address
-        //lendingPool = ILendingPool(provider.getLendingPool());
+        // polygon:" 0xd05e3E715d945B59290df0ae8eF85c1BdB684744
+        // mumbai: 0x178113104fEcbcD7fF8669a0150721e231F0FD4B
+        provider = ILendingPoolAddressesProvider(address(0x178113104fEcbcD7fF8669a0150721e231F0FD4B)); // polygon address
+        lendingPool = ILendingPool(provider.getLendingPool());
     }
     
-    function setPoolToken(address tokenAddress) public onlyRole(TOKEN_GATEKEEPER_ROLE) {
+    function setPoolToken(address tokenAddress) public override onlyRole(TOKEN_GATEKEEPER_ROLE) {
         require(address(IERC20(tokenAddress)) != address(0));
         poolTokenAddress = tokenAddress;
     }
     
-    
-    function _authorizeUpgrade(address newImplementation) internal onlyRole(UPGRADER_ROLE) override {
-        
-    }
-    
-    function authorizeAToken(address token, address aToken, uint decimals) public onlyRole(TOKEN_GATEKEEPER_ROLE) {
+    function authorizeAToken(address token, address aToken, uint decimals) public override onlyRole(TOKEN_GATEKEEPER_ROLE) {
         require(tokensToATokens[token] == address(0));
         require(tokensToATokens[aToken] == address(0));
         require(address(IERC20(token)) != address(0));
@@ -81,7 +70,7 @@ contract GoGBattlesVaultUpgradeable is Initializable, AccessControlUpgradeable, 
         tokensToATokens[token] = aToken;
     }
     
-    function depositUnnormalizedDecimals(address owner, uint256 amountNormalized, address stable) onlyRole(COORDINATOR_ROLE) public returns(bool)  {
+    function depositUnnormalizedDecimals(address owner, uint256 amountNormalized, address stable) onlyRole(COORDINATOR_ROLE) public override returns(bool)  {
         require(tokensToATokens[stable] != address(0), "Stablecoin address must be supported");
         uint256 amount = amountNormalized / toE18Factor[stable];
         IERC20 token = IERC20(stable);
@@ -98,7 +87,7 @@ contract GoGBattlesVaultUpgradeable is Initializable, AccessControlUpgradeable, 
         return true;
     }
     
-    function withdrawNormalizedDecimals(address owner, uint256 amountNormalized, address stable) onlyRole(COORDINATOR_ROLE) public returns(bool) {
+    function withdrawNormalizedDecimals(address owner, uint256 amountNormalized, address stable) onlyRole(COORDINATOR_ROLE) public override returns(bool) {
         require(tokensToATokens[stable] != address(0), "Stablecoin address must be supported");
         uint256 amount = amountNormalized / toE18Factor[stable];
         
@@ -109,11 +98,11 @@ contract GoGBattlesVaultUpgradeable is Initializable, AccessControlUpgradeable, 
         return true;
     }
     
-    function poolSize() public view returns(uint256) {
+    function poolSize() public override view returns(uint256) {
         return IERC20(poolTokenAddress).balanceOf(address(this));
     }
     
-    function accruePendingInterest() public returns(uint256) {
+    function accruePendingInterest() public override returns(uint256) {
         uint interestClaimed;
         
         for(uint i = 0; i < approvedTokens.length; ++i) {
@@ -135,11 +124,11 @@ contract GoGBattlesVaultUpgradeable is Initializable, AccessControlUpgradeable, 
         return interestClaimed;
     }
     
-    function doesVaultTypeExist(address erc20Address) public view returns(bool) {
+    function doesVaultTypeExist(address erc20Address) public override view returns(bool) {
         return tokensToATokens[erc20Address] != address(0);
     }
     
-    function balanceOfVaultsNormalizedDecimals() public view returns(uint256) {
+    function balanceOfVaultsNormalizedDecimals() public override view returns(uint256) {
         uint256 size = 0;
         for(uint i = 0; i < approvedTokens.length; ++i) {
             address tokenAddress = approvedTokens[i];
@@ -152,7 +141,7 @@ contract GoGBattlesVaultUpgradeable is Initializable, AccessControlUpgradeable, 
         return size; // size of pool in interest available
     }
     
-    function balanceOfVaultNormalizedDecimals(address erc20Address) public view returns(uint256) {
+    function balanceOfVaultNormalizedDecimals(address erc20Address) public override view returns(uint256) {
         require(doesVaultTypeExist(erc20Address), "Vault type does not exist");
         address aTokenAddress = tokensToATokens[erc20Address];
         uint decimalFactor = toE18Factor[erc20Address];
