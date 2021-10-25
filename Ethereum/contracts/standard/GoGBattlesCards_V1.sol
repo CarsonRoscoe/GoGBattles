@@ -16,7 +16,6 @@ struct Card {
 contract GoGBattlesCards_V1 is Cards, ERC1155, AccessControl, ERC1155Burnable {
     bytes32 public constant URI_SETTER_ROLE = keccak256("URI_SETTER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
     bytes32 public constant COORDINATOR_ROLE = keccak256("COORDINATOR_ROLE");
     
     IERC20 _token;
@@ -32,7 +31,6 @@ contract GoGBattlesCards_V1 is Cards, ERC1155, AccessControl, ERC1155Burnable {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(URI_SETTER_ROLE, msg.sender);
         _setupRole(MINTER_ROLE, msg.sender);
-        _setupRole(UPGRADER_ROLE, msg.sender);
         _setupRole(COORDINATOR_ROLE, msg.sender);
     }
 
