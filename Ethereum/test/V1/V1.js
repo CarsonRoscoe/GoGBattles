@@ -5,7 +5,7 @@ const { expect } = require('chai');
 const { Wallet } = require('ethers');
 const { ethers } = require('hardhat');
 
-const Contracts = ['GoGBattlesToken', 'GoGBattlesCoordinator', 'GoGBattlesCards', 'GoGBattlesCardFactory', 'GoGBattlesVault'];
+const Contracts = ['GoGBattlesToken', 'GoGBattlesMatchHistory', 'GoGBattlesCoordinator', 'GoGBattlesCards', 'GoGBattlesCardFactory', 'GoGBattlesVault'];
 const Version = 'V1';
 const Users = ['Deployer', 'Coordinator', 'Referee', 'Jane', 'Bob', 'Chris'];
 const Roles = ['DEFAULT_ADMIN_ROLE', 'COORDINATOR_ROLE', 'MINTER_ROLE', 'URI_SETTER_ROLE'];

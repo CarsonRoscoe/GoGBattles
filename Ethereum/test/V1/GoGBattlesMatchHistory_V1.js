@@ -26,7 +26,40 @@ async function resetScenario() {
 describe('GoG: Battles\' Match History Test Suite', () => {
   it('Scenario_V1 Loaded', async () => { await resetScenario(); });
 
-  it("Initiation success test", async () => {
-    // Test
+  it("Deployer is setup with the proper roles for access control.", async () => {
+    await expect(await dapp.GoGBattlesMatchHistory.hasRole(roles.DEFAULT_ADMIN_ROLE, user.Deployer.address));
+    await expect(await dapp.GoGBattlesMatchHistory.hasRole(roles.COORDINATOR_ROLE, user.Deployer.address));
+  });
+
+  it("Deployer can assign COORDINATOR_ROLE and restrict itself.", async () => {
+    await expect(await dapp.GoGBattlesMatchHistory.grantRole(roles.COORDINATOR_ROLE, user.Coordinator.address));
+    await expect(await dapp.GoGBattlesMatchHistory.renounceRole(roles.COORDINATOR_ROLE, user.Deployer.address));
+
+    await expect(await dapp.GoGBattlesMatchHistory.hasRole(roles.COORDINATOR_ROLE, user.Coordinator.address));
+    await expect(await dapp.GoGBattlesMatchHistory.hasRole(roles.COORDINATOR_ROLE, user.Deployer.address)).to.equal(false);
+  });
+  it("Only the coordinator can call publishMatch", async () => {
+    let deployedPublished = null;
+    let bobPublished = null;
+
+    try {
+      await dapp.GoGBattlesMatchHistory.connect(user.Deployer).publishMatch(user.Deployer.address, user.Jane.address, 0, '0x0');
+      deployedPublished = true;
+    }
+    catch(e) {
+      deployedPublished = false;
+    }
+
+    try {
+      await dapp.GoGBattlesMatchHistory.connect(user.Bob).publishMatch(user.Bob.address, user.Jane.address, 0, '0x0');
+      bobPublished = true;
+    }
+    catch(e) {
+      bobPublished = false;
+    }
+    await dapp.GoGBattlesMatchHistory.connect(user.Coordinator).publishMatch(user.Jane.address, user.Bob.address, 0, '0x0');
+
+    await expect(deployedPublished).to.equal(false);
+    await expect(bobPublished).to.equal(false);
   });
 });

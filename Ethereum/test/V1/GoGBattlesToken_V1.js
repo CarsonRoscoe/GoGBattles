@@ -98,31 +98,31 @@ describe('GoG: Battles\' Token Test Suite', () => {
     await expect(await dapp.GoGBattlesToken.balanceOf(user.Chris.address)).to.equal(1000);
   });
   it("Only the coordinator can call burnFrom", async () => {
-    let deployerMinted = null;
-    let bobMinted = null;
+    let deployerBurned = null;
+    let bobBurned = null;
 
     try {
       await dapp.GoGBattlesToken.connect(user.Jane).approve(user.Deployer.address, 1000);
       await dapp.GoGBattlesToken.connect(user.Deployer).burnFrom(user.Jane.address, 1000);
-      deployerMinted = true;
+      deployerBurned = true;
     }
     catch(e) {
-      deployerMinted = false;
+      deployerBurned = false;
     }
 
     try {
       await dapp.GoGBattlesToken.connect(user.Jane).approve(user.Bob.address, 1000);
       await dapp.GoGBattlesToken.connect(user.Bob).burnFrom(user.Jane.address, 1000);
-      bobMinted = true;
+      bobBurned = true;
     }
     catch(e) {
-      bobMinted = false;
+      bobBurned = false;
     }
     await dapp.GoGBattlesToken.connect(user.Chris).approve(user.Coordinator.address, 1000);
     await dapp.GoGBattlesToken.connect(user.Coordinator).burnFrom(user.Chris.address, 1000);
 
-    await expect(deployerMinted).to.equal(false);
-    await expect(bobMinted).to.equal(false);
+    await expect(deployerBurned).to.equal(false);
+    await expect(bobBurned).to.equal(false);
     await expect(await dapp.GoGBattlesToken.balanceOf(user.Deployer.address)).to.equal(0);
     await expect(await dapp.GoGBattlesToken.balanceOf(user.Bob.address)).to.equal(0);
     await expect(await dapp.GoGBattlesToken.balanceOf(user.Jane.address)).to.equal(2000);
