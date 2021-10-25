@@ -11,6 +11,7 @@ let fullNames = {};
 let dappFactory = {};
 let dapp = {};
 let user = {}
+let roles = {};
 
 async function resetScenario() {
   await Scenario_V1.resetScenarioAsync();
@@ -19,6 +20,7 @@ async function resetScenario() {
   dappFactory = scenario.dappFactory;
   dapp = scenario.dapp;
   user = scenario.user;
+  roles = scenario.roles;
 }
 
 describe('GoG: Battles\' Token Test Suite', () => {
@@ -30,6 +32,7 @@ describe('GoG: Battles\' Token Test Suite', () => {
     await expect(await dapp.GoGBattlesToken.symbol()).to.equal('GOGB');
   });
   it("Deployer is setup with the DEFAULT_ADMIN_ROLE for access control.", async () => {
+
   });
   it("Only the coordinator can call mint, and mint is fully implemented, including batch mints.", async () => {
   });
