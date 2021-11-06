@@ -261,16 +261,18 @@ describe('GoG: Battles\' Cards Test Suite', () => {
   it("Only the coordinator can burnBatch.", async () => {
     let initialTokenCounter = (await dapp.GoGBattlesCards.nextTokenID()).toNumber();
     let janesInitialTokens = [];
+    let janesAmounts = [];
     for(let i = 0; i < initialTokenCounter; ++i) {
       let balance = (await dapp.GoGBattlesCards.balanceOf(user.Jane.address, i)).toNumber();
       if (balance > 0) {
         janesInitialTokens.push(i);
+        janesAmounts.push(1);
       }
     }
 
     let janeFailedToBurn = false;
     try {
-      await dapp.GoGBattlesCards.connect(user.Jane).burnBatch(user.Jane.address, janesInitialTokens);
+      await dapp.GoGBattlesCards.connect(user.Jane).burnBatch(user.Jane.address, janesInitialTokens, janesAmounts);
     } catch {
       janeFailedToBurn = true;
     }
@@ -278,12 +280,12 @@ describe('GoG: Battles\' Cards Test Suite', () => {
 
     let deployedFailedToBurn = false;
     try {
-      await dapp.GoGBattlesCards.connect(user.Deployer).burnBatch(user.Jane.address, janesInitialTokens);
+      await dapp.GoGBattlesCards.connect(user.Deployer).burnBatch(user.Jane.address, janesInitialTokens, janesAmounts);
     } catch {
       deployedFailedToBurn = true;
     }
     await expect(deployedFailedToBurn);
-    await expect(await dapp.GoGBattlesCards.connect(user.Coordinator).burnBatch(user.Jane.address, janesInitialTokens));
+    await expect(await dapp.GoGBattlesCards.connect(user.Coordinator).burnBatch(user.Jane.address, janesInitialTokens, janesAmounts));
 
     let janesEndingTokens = [];
     for(let i = 0; i < initialTokenCounter; ++i) {
@@ -293,8 +295,8 @@ describe('GoG: Battles\' Cards Test Suite', () => {
       }
     }
 
-    await expect(janesEndingTokens.length).not.equal.to(janesInitialTokens.length);
-    await expect(janesEndingTokens.length).equal.to(0);;
+    await expect(janesEndingTokens.length).to.not.equal(janesInitialTokens.length);
+    await expect(janesEndingTokens.length).to.equal(0);
 
   });
   it("Card burning is locked for a time after being minted.", async () => {

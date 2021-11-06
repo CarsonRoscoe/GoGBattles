@@ -87,14 +87,6 @@ contract GoGBattlesCards_V1 is Cards, ERC1155, AccessControl, ERC1155Burnable {
         super._burnBatch(owner, ids, amounts);
     }
     
-    function burnBatch(address owner, uint256[] memory ids) public override onlyRole(COORDINATOR_ROLE) {
-        uint256[] memory amounts = new uint256[](ids.length);
-        for(uint i = 0; i < ids.length; ++i) {
-            amounts[i] = 1;
-        }
-        burnBatch(owner, ids, amounts);
-    }
-    
     function backingValueOf(uint[] memory cardIds) public override view returns(uint) {
         uint result = 0;
         for(uint i = 0; i < cardIds.length; ++i) {
