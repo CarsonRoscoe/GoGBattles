@@ -8,7 +8,7 @@ const { ethers } = require('hardhat');
 const Contracts = ['GoGBattlesToken', 'GoGBattlesMatchHistory', 'GoGBattlesCoordinator', 'GoGBattlesCards', 'GoGBattlesCardFactory', 'GoGBattlesVault'];
 const Version = 'V1';
 const Users = ['Deployer', 'Coordinator', 'Referee', 'Jane', 'Bob', 'Chris'];
-const Roles = ['DEFAULT_ADMIN_ROLE', 'COORDINATOR_ROLE', 'MINTER_ROLE', 'URI_SETTER_ROLE', 'UPGRADER_ROLE'];
+const Roles = ['DEFAULT_ADMIN_ROLE', 'COORDINATOR_ROLE', 'MINTER_ROLE', 'URI_SETTER_ROLE', 'UPGRADER_ROLE', 'TOKEN_GATEKEEPER_ROLE'];
 
 let fullNames = {};
 let dappFactory = {};

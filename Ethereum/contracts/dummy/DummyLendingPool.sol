@@ -14,11 +14,11 @@ contract DummyLendingPool is ILendingPool {
     DummyDAI dai;
     DummyaDAI aDai;
 
-    constructor() {
-        usdc = new DummyUSDC();
-        aUsdc = new DummyaUSDC();
-        dai = new DummyDAI();
-        aDai = new DummyaDAI();
+    constructor(address usdcAddress, address aUSDCAddress, address daiAddress, address aDAIAddress) {
+        usdc = DummyUSDC(usdcAddress);
+        aUsdc = DummyaUSDC(aUSDCAddress);
+        dai = DummyDAI(daiAddress);
+        aDai = DummyaDAI(aDAIAddress);
 
         console.log("USDC: ");
         console.log(address(usdc));
@@ -29,7 +29,6 @@ contract DummyLendingPool is ILendingPool {
         console.log("aDAI: ");
         console.log(address(aDai));
     }
-    
 
     function deposit(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external override {
         ERC20 token = ERC20(asset);
