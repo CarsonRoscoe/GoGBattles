@@ -3,7 +3,7 @@ pragma solidity ^0.8.3;
 
 interface Vault {
     function setPoolToken(address tokenAddress) external;
-    function authorizeAToken(address token, address aToken, uint decimals) external;
+    function authorizeAToken(address token, address aToken) external;
     function depositUnnormalizedDecimals(address owner, uint256 amountNormalized, address stable) external returns(bool);
     function withdrawNormalizedDecimals(address owner, uint256 amountNormalized, address stable) external returns(bool);
     function poolSize() external view returns(uint256);
