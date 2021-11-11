@@ -177,7 +177,7 @@ contract GoGBattlesCoordinator_V1 is Coordinator, AccessControl {
         // Transfer deposit to vault and receive tokens
         require(vault.doesVaultTypeExist(address(erc20)), "No vaults exist for token type");
         require(erc20.approve(address(vault), amount), "Must approve vault for token deposit.");
-        require(vault.depositUnnormalizedDecimals(ercDepositer, amount, address(erc20)), "Vault deposit must succeed.");
+        require(vault.deposit(ercDepositer, amount, address(erc20)), "Vault deposit must succeed.");
         
         // Mint token
         token.mint(tokenReceiver, amount);
@@ -219,7 +219,7 @@ contract GoGBattlesCoordinator_V1 is Coordinator, AccessControl {
         token.burnFrom(user, amount);
         
         require(vault.doesVaultTypeExist(erc20), "ERC20 is not a supported vault type.");
-        require(vault.balanceOfVaultNormalizedDecimals(address(erc20)) >= amount, "Vault must be liquid");
-        require(vault.withdrawNormalizedDecimals(user, amount, erc20), "Vault must withdraw desired token to user.");
+        require(vault.balanceOfVault(address(erc20)) >= amount, "Vault must be liquid");
+        require(vault.withdraw(user, amount, erc20), "Vault must withdraw desired token to user.");
     }
 }

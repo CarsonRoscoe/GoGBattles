@@ -26,22 +26,8 @@ async function resetScenario() {
   dapp.aUSDC = await (await ethers.getContractFactory('DummyaUSDC')).deploy();
   dapp.DAI = await (await ethers.getContractFactory('DummyDAI')).deploy();
   dapp.aDAI = await (await ethers.getContractFactory('DummyaDAI')).deploy();
-  dapp.DummyLendingPoolAddressesProvider = await(await ethers.getContractFactory('DummyLendingPoolAddressesProvider')).deploy();
+  dapp.LendingPoolAddressesProvider = await(await ethers.getContractFactory('DummyLendingPoolAddressesProvider')).deploy(dapp.USDC.address, dapp.aUSDC.address, dapp.DAI.address, dapp.aDAI.address);
 }
-
-/**
- * 
-    function setPoolToken(address tokenAddress) external;
-    function authorizeAToken(address token, address aToken, uint decimals) external;
-    function depositUnnormalizedDecimals(address owner, uint256 amountNormalized, address stable) external returns(bool);
-    function withdrawNormalizedDecimals(address owner, uint256 amountNormalized, address stable) external returns(bool);
-    function poolSize() external view returns(uint256);
-    function accruePendingInterest() external returns(uint256);    
-    function doesVaultTypeExist(address erc20Address) external view returns(bool);
-    function balanceOfVaultsNormalizedDecimals() external view returns(uint256);
-    function balanceOfVaultNormalizedDecimals(address erc20Address) external view returns(uint256);
- * 
- */
 
 describe('GoG: Battles\' Vault Test Suite', () => {
   it('Scenario_V1 Loaded', async () => { await resetScenario(); });
@@ -55,6 +41,31 @@ describe('GoG: Battles\' Vault Test Suite', () => {
     }
     await expect(publicSettingFailed);
     await expect(await dapp.GoGBattlesVault.connect(user.Deployer).setPoolToken(dapp.GoGBattlesToken.address));
+  });
+
+  it("setLendingPoolAddressesProvider can set AAVE lending pool addresses provider", async () => {
+    let publicSettingFailed = false;
+    try {
+      await expect(await dapp.GoGBattlesVault.connect(user.Chris).setLendingPoolAddressesProvider(dapp.LendingPoolAddressesProvider.address));
+    } catch{
+      publicSettingFailed = true;
+    }
+    await expect(publicSettingFailed);
+    await expect(await dapp.GoGBattlesVault.connect(user.Deployer).setLendingPoolAddressesProvider(dapp.LendingPoolAddressesProvider.address));
+  });
+
+  it("Deployer is setup with the proper roles for access control.", async () => {
+    await expect(await dapp.GoGBattlesVault.hasRole(roles.DEFAULT_ADMIN_ROLE, user.Deployer.address));
+    await expect(await dapp.GoGBattlesVault.hasRole(roles.COORDINATOR_ROLE, user.Deployer.address));
+    await expect(await dapp.GoGBattlesVault.hasRole(roles.TOKEN_GATEKEEPER_ROLE, user.Deployer.address));
+  });
+
+  it("Deployer can assign COORDINATOR_ROLE and restrict itself.", async () => {
+    await expect(await dapp.GoGBattlesVault.grantRole(roles.COORDINATOR_ROLE, user.Coordinator.address));
+    await expect(await dapp.GoGBattlesVault.renounceRole(roles.COORDINATOR_ROLE, user.Deployer.address));
+
+    await expect(await dapp.GoGBattlesVault.hasRole(roles.COORDINATOR_ROLE, user.Coordinator.address));
+    await expect(await dapp.GoGBattlesVault.hasRole(roles.COORDINATOR_ROLE, user.Deployer.address)).to.equal(false);
   });
 
   it("authorizeAToken can authorize USDC and DAI & handle differing decimals", async () => {
@@ -80,20 +91,58 @@ describe('GoG: Battles\' Vault Test Suite', () => {
     await expect(await dapp.GoGBattlesVault.doesVaultTypeExist(dapp.USDC.address));
     await expect(await dapp.GoGBattlesVault.doesVaultTypeExist(dapp.DAI.address));
   });
+
+  it("convert can properly convert decimals", async () => {
+    await expect(await dapp.GoGBattlesVault.convertAmount(dapp.USDC.address, 1, dapp.DAI.address)).to.equal(1_000_000_000_000);
+    await expect(await dapp.GoGBattlesVault.convertAmount(dapp.DAI.address, 1_000_000_000_000, dapp.USDC.address)).to.equal(1);
+  });
   
-  it("depositUnnormalizedDecimals can deposit USDC and DAI & handle differing decimals", async () => {
-    // let nonVaultTokenCannotBeDeposited = false;
-    // try {
-    //   await dapp.GoGBattlesToken.connect(user.Coordinator).mint(user.Coordinator.address, 1_000_000);
-    // await expect(await dapp.GoGBattlesVault.connect(user.Coordinator).depositUnnormalizedDecimals());
-    // } catch {
-    //   nonVaultTokenCannotBeDeposited = true;
-    // }
+  it("deposit can deposit USDC and DAI & handle differing decimals", async () => {
+    await dapp.GoGBattlesToken.connect(user.Deployer).mint(user.Coordinator.address, 1_000_000);
+    await dapp.GoGBattlesToken.connect(user.Deployer).approve(dapp.GoGBattlesVault.address, 1_000_000);
+    let nonVaultTokenCannotBeDeposited = false;
+    try {
+    await expect(await dapp.GoGBattlesVault.connect(user.Coordinator).deposit( user.Chris.address, 1_000_000, dapp.GoGBattlesToken.address ));
+    } catch {
+      nonVaultTokenCannotBeDeposited = true;
+    }
+
+    let balanceBefore = {
+      Coordinator : {
+        USDC : (await dapp.USDC.balanceOf(user.Coordinator.address)).toNumber(),
+        aUSDC : (await dapp.aUSDC.balanceOf(user.Coordinator.address)).toNumber(),
+      },
+      Vault : {
+        USDC : (await dapp.USDC.balanceOf(dapp.GoGBattlesVault.address)).toNumber(),
+        aUSDC : (await dapp.aUSDC.balanceOf(dapp.GoGBattlesVault.address)).toNumber(),
+      },
+    }
+
+    // Deposit 1000 USDC
+    await dapp.USDC.connect(user.Coordinator).mint(user.Coordinator.address, 1);
+    await dapp.USDC.connect(user.Coordinator).approve(dapp.GoGBattlesVault.address, 1);
+    await expect(await dapp.GoGBattlesVault.connect(user.Coordinator).deposit( user.Chris.address, 1000_000_000_000, dapp.USDC.address ));
     
+    let balanceAfter = {
+      Coordinator : {
+        USDC : (await dapp.USDC.balanceOf(user.Coordinator.address)).toNumber(),
+        aUSDC : (await dapp.aUSDC.balanceOf(user.Coordinator.address)).toNumber(),
+      },
+      Vault : {
+        USDC : (await dapp.USDC.balanceOf(dapp.GoGBattlesVault.address)).toNumber(),
+        aUSDC : (await dapp.aUSDC.balanceOf(dapp.GoGBattlesVault.address)).toNumber(),
+      },
+    }
+
+    await expect(balanceAfter.Coordinator.USDC - balanceBefore.Coordinator.USDC == -1000_000_000);
+    await expect(balanceAfter.Coordinator.aUSDC - balanceBefore.Coordinator.aUSDC == 1000_000_000);
+    await expect(balanceAfter.Vault.USDC - balanceBefore.Vault.USDC == 1000_000_000);
+    await expect(balanceAfter.Vault.aUSDC - balanceBefore.Vault.aUSDC == -1000_000_000);
+
   });
   
   it("balanceofVaultsNormalizedDecimals can get the balances in e18 form", async () => {
-
+    
   });
   
   it("balanceofVaultNormalizedDecimals can get the balances in e18 form", async () => {

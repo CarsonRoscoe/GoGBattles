@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "../interfaces/Vault.sol";
 import "../interfaces/AAVEInterface.sol";
+import "hardhat/console.sol";
 
 contract GoGBattlesVault_V1 is Vault, AccessControl {
     bytes32 public constant COORDINATOR_ROLE = keccak256("COORDINATOR_ROLE");
@@ -19,7 +20,7 @@ contract GoGBattlesVault_V1 is Vault, AccessControl {
     
     // List of Token Address
     address[] approvedTokens;
-    mapping(address => uint) toE18Factor;
+    mapping(address => int) toE18Factor;
     
     // Map<TokenAddress, aTokenAddress>
     mapping(address => address) tokensToATokens;
@@ -40,13 +41,34 @@ contract GoGBattlesVault_V1 is Vault, AccessControl {
         // Retrieve LendingPool address
         // polygon:" 0xd05e3E715d945B59290df0ae8eF85c1BdB684744
         // mumbai: 0x178113104fEcbcD7fF8669a0150721e231F0FD4B
-        // provider = ILendingPoolAddressesProvider(address(0x178113104fEcbcD7fF8669a0150721e231F0FD4B)); // polygon address
-        // lendingPool = ILendingPool(provider.getLendingPool());
     }
     
     function setPoolToken(address tokenAddress) public override onlyRole(TOKEN_GATEKEEPER_ROLE) {
         require(address(IERC20(tokenAddress)) != address(0));
         poolTokenAddress = tokenAddress;
+    }
+
+    function setLendingPoolAddressesProvider(address lendingPoolAddressesProvider) public override onlyRole(TOKEN_GATEKEEPER_ROLE) {
+        provider = ILendingPoolAddressesProvider(lendingPoolAddressesProvider);
+        lendingPool = ILendingPool(provider.getLendingPool());
+        require(address(provider) != address(0));
+        require(address(lendingPool) != address(0));
+    }
+
+    function convertAmount(address from, uint amount, address to) public view returns(uint) {
+        ERC20 erc20From = ERC20(from);
+        ERC20 erc20To = ERC20(to);
+        uint fromDecimals = erc20From.decimals();
+        uint toDecimals = erc20To.decimals();
+        if (fromDecimals > toDecimals) {
+            return 10**(fromDecimals-toDecimals) / amount;
+        }
+        else if (toDecimals > fromDecimals) {
+            return 10**(toDecimals-fromDecimals) * amount;
+        }
+        else {
+            return amount; // No chnage
+        }
     }
     
     function authorizeAToken(address token, address aToken) public override onlyRole(TOKEN_GATEKEEPER_ROLE) {
@@ -58,7 +80,8 @@ contract GoGBattlesVault_V1 is Vault, AccessControl {
         require(address(erc20aToken) != address(0));
         require(erc20Token.decimals() == erc20aToken.decimals());
         uint decimals = erc20Token.decimals();
-        toE18Factor[token] = (10**(18-decimals));
+        require(decimals <= 18);
+        toE18Factor[token] = int(10**18)-int(10**(decimals));
         approvedTokens.push(token);
         tokensToATokens[token] = aToken;
     }
@@ -67,16 +90,17 @@ contract GoGBattlesVault_V1 is Vault, AccessControl {
         return tokensToATokens[erc20Address] != address(0);
     }
     
-    function depositUnnormalizedDecimals(address owner, uint256 amountNormalized, address stable) onlyRole(COORDINATOR_ROLE) public override returns(bool)  {
+    function deposit(address owner, uint256 amountNormalized, address stable) onlyRole(COORDINATOR_ROLE) public override returns(bool)  {
         require(tokensToATokens[stable] != address(0), "Stablecoin address must be supported");
-        uint256 amount = amountNormalized / toE18Factor[stable];
+        uint256 amount = convertAmount(poolTokenAddress, amountNormalized, stable);
+
         IERC20 token = IERC20(stable);
-        
+
+        console.log(token.allowance(msg.sender, address(this)) );
         
         require(token.allowance(msg.sender, address(this)) >= amount, "Must be allowed to receive token.");
         require(token.transferFrom(msg.sender, address(this), amount));
-
-        token.approve(address(lendingPool), amount);
+        require(token.approve(address(lendingPool), amount));
         lendingPool.deposit(stable, amount, msg.sender, 0);
         
         emit DepositStable(owner, stable, amount );
@@ -84,9 +108,9 @@ contract GoGBattlesVault_V1 is Vault, AccessControl {
         return true;
     }
     
-    function withdrawNormalizedDecimals(address owner, uint256 amountNormalized, address stable) onlyRole(COORDINATOR_ROLE) public override returns(bool) {
+    function withdraw(address owner, uint256 amountNormalized, address stable) onlyRole(COORDINATOR_ROLE) public override returns(bool) {
         require(tokensToATokens[stable] != address(0), "Stablecoin address must be supported");
-        uint256 amount = amountNormalized / toE18Factor[stable];
+        uint256 amount = convertAmount(poolTokenAddress, amountNormalized, stable);
         
         lendingPool.withdraw(stable, amount, owner);
         
@@ -104,41 +128,38 @@ contract GoGBattlesVault_V1 is Vault, AccessControl {
         
         for(uint i = 0; i < approvedTokens.length; ++i) {
             address tokenAddress = approvedTokens[i];
-            uint decimalFactor = toE18Factor[tokenAddress];
             address aTokenAddress = tokensToATokens[tokenAddress];
             IERC20 aToken = IERC20(aTokenAddress);
             
             uint balance = vaultBalances[tokenAddress];
-            uint aBalance = aToken.balanceOf(address(this)) * decimalFactor;
+            uint aBalance = convertAmount(aTokenAddress, aToken.balanceOf(address(this)), poolTokenAddress);
             
             uint interest = aBalance - balance;
             
             vaultBalances[tokenAddress] = aBalance;
             
-            interestClaimed += interest * decimalFactor;
+            interestClaimed +=  interest;
         }
         
         return interestClaimed;
     }
     
-    function balanceOfVaultsNormalizedDecimals() public override view returns(uint256) {
+    function balanceOfVaults() public override view returns(uint256) {
         uint256 size = 0;
         for(uint i = 0; i < approvedTokens.length; ++i) {
             address tokenAddress = approvedTokens[i];
-            uint decimalFactor = toE18Factor[tokenAddress];
             address aTokenAddress = tokensToATokens[tokenAddress];
             IERC20 aToken = IERC20(aTokenAddress);
             
-            size += aToken.balanceOf(address(this)) * decimalFactor;
+            size += convertAmount(tokenAddress, aToken.balanceOf(address(this)), poolTokenAddress);
         }
         return size; // size of pool in interest available
     }
     
-    function balanceOfVaultNormalizedDecimals(address erc20Address) public override view returns(uint256) {
+    function balanceOfVault(address erc20Address) public override view returns(uint256) {
         require(doesVaultTypeExist(erc20Address), "Vault type does not exist");
         address aTokenAddress = tokensToATokens[erc20Address];
-        uint decimalFactor = toE18Factor[erc20Address];
         IERC20 aToken = IERC20(aTokenAddress);
-        return aToken.balanceOf(address(this)) * decimalFactor;
+        return convertAmount(aTokenAddress, aToken.balanceOf(address(this)), poolTokenAddress );
     }
 }

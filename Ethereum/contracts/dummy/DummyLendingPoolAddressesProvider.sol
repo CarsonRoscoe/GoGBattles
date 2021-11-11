@@ -7,8 +7,8 @@ import "./DummyLendingPool.sol";
 contract DummyLendingPoolAddressesProvider is ILendingPoolAddressesProvider {
     DummyLendingPool lendingPool;
 
-    constructor() {
-        lendingPool = new DummyLendingPool();
+    constructor(address usdcAddress, address aUSDCAddress, address daiAddress, address aDAIAddress) {
+        lendingPool = new DummyLendingPool(usdcAddress, aUSDCAddress, daiAddress, aDAIAddress);
     }
 
     function getLendingPool() external override view returns (address) {
