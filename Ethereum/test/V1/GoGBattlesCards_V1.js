@@ -23,6 +23,11 @@ async function resetScenario() {
   roles = scenario.roles;
 }
 
+const delay = async (seconds) => {
+  await ethers.provider.send('evm_increaseTime', [seconds]);
+  await ethers.provider.send('evm_mine');
+};
+
 describe('GoG: Battles\' Cards Test Suite', () => {
   it('Scenario_V1 Loaded', async () => { await resetScenario(); });
 
@@ -285,6 +290,7 @@ describe('GoG: Battles\' Cards Test Suite', () => {
       deployedFailedToBurn = true;
     }
     await expect(deployedFailedToBurn);
+    await delay(1 * 24 * 60 * 60);
     await expect(await dapp.GoGBattlesCards.connect(user.Coordinator).burnBatch(user.Jane.address, janesInitialTokens, janesAmounts));
 
     let janesEndingTokens = [];
@@ -300,12 +306,68 @@ describe('GoG: Battles\' Cards Test Suite', () => {
 
   });
   it("Card burning is locked for a time after being minted.", async () => {
+    await dapp.GoGBattlesToken.connect(user.Coordinator).mint(user.Coordinator.address, 100);
+    await dapp.GoGBattlesToken.connect(user.Coordinator).approve(dapp.GoGBattlesCards.address, 100);
+    await dapp.GoGBattlesCards.connect(user.Coordinator).mintBatch(user.Coordinator.address, [30], [100]);
+    let tokenId = (await dapp.GoGBattlesCards.nextTokenID()).toNumber() - 1;
 
+    let earlyBurnFailed = false;
+    try {
+      await dapp.GoGBattlesCards.connect(user.Coordinator).burnBatch(user.Coordinator.address, [tokenId], [1]);
+    } catch(e) {
+      earlyBurnFailed = true;
+    }
+    await expect(earlyBurnFailed);
+
+    await delay(1 * 24 * 60 * 60);
+
+    await expect(await dapp.GoGBattlesCards.connect(user.Coordinator).burnBatch(user.Coordinator.address, [tokenId], [1]));
+    
   });
   it("Can determine the backing value of a card.", async () => {
+    let initialTokenCounter = (await dapp.GoGBattlesCards.nextTokenID()).toNumber();
 
+    await dapp.GoGBattlesToken.connect(user.Coordinator).mint(user.Coordinator.address, 100);
+    await dapp.GoGBattlesToken.connect(user.Coordinator).approve(dapp.GoGBattlesCards.address, 100);
+    await dapp.GoGBattlesCards.connect(user.Coordinator).mintBatch(user.Chris.address, [30], [100]);
+
+    await expect(await dapp.GoGBattlesCards.backingValueOf([initialTokenCounter]));
+    initialTokenCounter++;
+
+
+    // Reset balance of Coordinator to 0
+    let tokenBalance = await dapp.GoGBattlesToken.balanceOf(user.Coordinator.address);
+    await dapp.GoGBattlesToken.connect(user.Coordinator).burn(tokenBalance);
+
+    await dapp.GoGBattlesToken.connect(user.Coordinator).mint(user.Coordinator.address, 1000);
+    await dapp.GoGBattlesToken.connect(user.Coordinator).approve(dapp.GoGBattlesCards.address, 1000);
+    await dapp.GoGBattlesCards.connect(user.Coordinator).mintPack(user.Chris.address, 1000);
+
+    let postTokenCounter = (await dapp.GoGBattlesCards.nextTokenID()).toNumber();
+    let sum = 0;
+    for(let i = initialTokenCounter; i < postTokenCounter; ++i) {
+      sum += dapp.GoGBattlesCards.backingValueOf([i]);
+    }
+    await expect((sum + await dapp.GoGBattlesToken.balanceOf(user.Coordinator.address)) == 1000);
   });
   it("Can determine the backing balance of an account.", async () => {
+    // Reset balance of Coordinator to 0
+    let tokenBalance = await dapp.GoGBattlesToken.balanceOf(user.Coordinator.address);
+    await dapp.GoGBattlesToken.connect(user.Coordinator).burn(tokenBalance);
 
+    await dapp.GoGBattlesToken.connect(user.Coordinator).mint(user.Coordinator.address, 100);
+    await dapp.GoGBattlesToken.connect(user.Coordinator).approve(dapp.GoGBattlesCards.address, 100);
+    await dapp.GoGBattlesCards.connect(user.Coordinator).mintBatch(user.Chris.address, [30], [100]);
+
+    await dapp.GoGBattlesToken.connect(user.Coordinator).mint(user.Coordinator.address, 100);
+    await dapp.GoGBattlesToken.connect(user.Coordinator).approve(dapp.GoGBattlesCards.address, 100);
+    await dapp.GoGBattlesCards.connect(user.Coordinator).mintPack(user.Chris.address, 100);
+
+
+    let remainingTokens = await dapp.GoGBattlesToken.balanceOf(user.Coordinator.address);
+    let value = await dapp.GoGBattlesCards.connect(user.Coordinator).backingBalanceOf(user.Chris.address);
+
+    await expect(value > 100);
+    await expect(value + remainingTokens == 200);
   });
 });

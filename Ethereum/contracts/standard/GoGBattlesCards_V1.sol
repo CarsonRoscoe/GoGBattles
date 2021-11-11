@@ -9,11 +9,6 @@ import "../interfaces/CardFactory.sol";
 import "../interfaces/Cards.sol";
 import "../interfaces/Vault.sol";
 
-/**
-    TODO:
-    - Lock duration setable by DEFAULT_ADMIN
- */
-
 contract GoGBattlesCards_V1 is Cards, ERC1155, AccessControl, ERC1155Burnable {
     bytes32 public constant URI_SETTER_ROLE = keccak256("URI_SETTER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -23,6 +18,7 @@ contract GoGBattlesCards_V1 is Cards, ERC1155, AccessControl, ERC1155Burnable {
     CardFactory _factory;
     Vault _vault;
     
+    uint _timeLock;
     mapping(uint => uint) _tokenIdToCardId;
     mapping(uint => uint) _valueOfCards;
     mapping(uint => uint) _timelockOnCards;
@@ -35,6 +31,7 @@ contract GoGBattlesCards_V1 is Cards, ERC1155, AccessControl, ERC1155Burnable {
         _setupRole(URI_SETTER_ROLE, msg.sender);
         _setupRole(MINTER_ROLE, msg.sender);
         _setupRole(COORDINATOR_ROLE, msg.sender);
+        setLockTime(1 days);
     }
 
     function setGoGBattlesTokenAndCardFactory(address gogBattlesToken, address gogBattlesCardFactory, address gogBattlesVault) public override onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -48,6 +45,11 @@ contract GoGBattlesCards_V1 is Cards, ERC1155, AccessControl, ERC1155Burnable {
 
     function setURI(string memory newuri) public override onlyRole(URI_SETTER_ROLE) {
         _setURI(newuri);
+    }
+
+    function setLockTime(uint time) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(time > 10 minutes);
+        _timeLock = time;
     }
 
     function mintUnbacked(address to, uint cardId) public override onlyRole(MINTER_ROLE) returns(uint256) {
@@ -104,15 +106,19 @@ contract GoGBattlesCards_V1 is Cards, ERC1155, AccessControl, ERC1155Burnable {
         return _tokenIdToCardId[tokenId];
     }
     
+    function getLockTime(uint tokenId) public view returns(uint) {
+        return _timelockOnCards[tokenId];
+    }
+
     function _beforeTokenTransfer( address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data ) internal override virtual {
-        // mint case
+        // mint case, add timelock
         if (from == address(0)) {
             for(uint i = 0; i < ids.length; ++i) {
-                _timelockOnCards[ids[i]] = block.timestamp; // + howeverlong the lock period is
+                _timelockOnCards[ids[i]] = block.timestamp + _timeLock;
             }
         }
         
-        // burn case
+        // burn case, a timelock
         if (to == address(0)) {
             for(uint i = 0; i < ids.length; ++i) {
                 require(_timelockOnCards[ids[i]] < block.timestamp, "You cannot burn a card too soon after minting.");
@@ -124,9 +130,12 @@ contract GoGBattlesCards_V1 is Cards, ERC1155, AccessControl, ERC1155Burnable {
             valueOfCards += _valueOfCards[ids[i]];
         }
         
+        // Sender always loses value of cards
         if (from != address(0)) {
             _valueOfAccount[from] -= valueOfCards;
         }
+
+        // Receiver always gains value of cards
         if (to != address(0)) {
             _valueOfAccount[to] += valueOfCards;
         }
