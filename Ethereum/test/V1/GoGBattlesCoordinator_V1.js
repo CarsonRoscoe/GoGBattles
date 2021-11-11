@@ -11,6 +11,7 @@ let fullNames = {};
 let dappFactory = {};
 let dapp = {};
 let user = {}
+let roles = {};
 
 async function resetScenario() {
   await Scenario_V1.resetScenarioAsync();
@@ -19,6 +20,7 @@ async function resetScenario() {
   dappFactory = scenario.dappFactory;
   dapp = scenario.dapp;
   user = scenario.user;
+  roles = scenario.roles;
 }
 
 describe('GoG: Battles\' Coordinator Test Suite', () => {

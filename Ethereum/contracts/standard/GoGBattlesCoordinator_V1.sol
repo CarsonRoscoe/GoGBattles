@@ -199,8 +199,12 @@ contract GoGBattlesCoordinator_V1 is Coordinator, AccessControl {
         require(cards.isApprovedForAll(user, address(this)), "Must be approved to burn send cards to burn");
         uint256 amount = cards.backingValueOf(tokenIds);
         require(amount > 0, "Cards must have a value to burn");
-        
-        cards.burnBatch(user, tokenIds);
+
+        uint256[] memory amounts = new uint256[](tokenIds.length);
+        for(uint i = 0; i < tokenIds.length; ++i) {
+            amounts[i] = 1;
+        }
+        cards.burnBatch(user, tokenIds, amounts);
         token.mint(user, amount);
         
         emit BurnCards(user, tokenIds);

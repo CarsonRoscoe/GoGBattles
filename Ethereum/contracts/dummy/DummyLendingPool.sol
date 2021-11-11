@@ -2,23 +2,23 @@
 pragma solidity ^0.8.3;
 
 import "../interfaces/AAVEInterface.sol";
-import "./USDC.sol";
-import "./aUSDC.sol";
-import "./DAI.sol";
-import "./aDAI.sol";
+import "./DummyUSDC.sol";
+import "./DummyaUSDC.sol";
+import "./DummyDAI.sol";
+import "./DummyaDAI.sol";
 import "hardhat/console.sol";
 
 contract DummyLendingPool is ILendingPool {
     DummyUSDC usdc;
     DummyaUSDC aUsdc;
     DummyDAI dai;
-    DummyaDai aDai;
+    DummyaDAI aDai;
 
     constructor() {
         usdc = new DummyUSDC();
         aUsdc = new DummyaUSDC();
         dai = new DummyDAI();
-        aDai = new DummyaDai();
+        aDai = new DummyaDAI();
 
         console.log("USDC: ");
         console.log(address(usdc));
@@ -52,19 +52,4 @@ contract DummyLendingPool is ILendingPool {
             dai.mint(to, amount);
         }
     }
-}
-
-contract DummyLendingPoolAddressesProvider is ILendingPoolAddressesProvider {
-    DummyLendingPool lendingPool;
-
-    constructor() {
-        lendingPool = new DummyLendingPool();
-    }
-
-    function getLendingPool() external override view returns (address) {
-        return address(lendingPool);
-    }
-
-    function setLendingPoolImpl(address pool) external override {} // Set in constructor
-    function getLendingPoolConfigurator() external override view returns (address) {}
 }

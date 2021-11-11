@@ -2,7 +2,7 @@
 pragma solidity ^0.8.3;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "../interfaces/Vault.sol";
 import "../interfaces/AAVEInterface.sol";
 
@@ -49,15 +49,22 @@ contract GoGBattlesVault_V1 is Vault, AccessControl {
         poolTokenAddress = tokenAddress;
     }
     
-    function authorizeAToken(address token, address aToken, uint decimals) public override onlyRole(TOKEN_GATEKEEPER_ROLE) {
+    function authorizeAToken(address token, address aToken) public override onlyRole(TOKEN_GATEKEEPER_ROLE) {
         require(tokensToATokens[token] == address(0));
         require(tokensToATokens[aToken] == address(0));
-        require(address(IERC20(token)) != address(0));
-        require(address(IERC20(aToken)) != address(0));
-        require(decimals <= 18);
+        ERC20 erc20Token = ERC20(token);
+        ERC20 erc20aToken = ERC20(aToken);
+        require(address(erc20Token) != address(0));
+        require(address(erc20aToken) != address(0));
+        require(erc20Token.decimals() == erc20aToken.decimals());
+        uint decimals = erc20Token.decimals();
         toE18Factor[token] = (10**(18-decimals));
         approvedTokens.push(token);
         tokensToATokens[token] = aToken;
+    }
+    
+    function doesVaultTypeExist(address erc20Address) public override view returns(bool) {
+        return tokensToATokens[erc20Address] != address(0);
     }
     
     function depositUnnormalizedDecimals(address owner, uint256 amountNormalized, address stable) onlyRole(COORDINATOR_ROLE) public override returns(bool)  {
@@ -112,10 +119,6 @@ contract GoGBattlesVault_V1 is Vault, AccessControl {
         }
         
         return interestClaimed;
-    }
-    
-    function doesVaultTypeExist(address erc20Address) public override view returns(bool) {
-        return tokensToATokens[erc20Address] != address(0);
     }
     
     function balanceOfVaultsNormalizedDecimals() public override view returns(uint256) {

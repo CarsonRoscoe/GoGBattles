@@ -5,14 +5,16 @@ const { expect } = require('chai');
 const { Wallet } = require('ethers');
 const { ethers } = require('hardhat');
 
-const Contracts = ['GoGBattlesToken', 'GoGBattlesCoordinator', 'GoGBattlesCards', 'GoGBattlesCardFactory', 'GoGBattlesVault'];
+const Contracts = ['GoGBattlesToken', 'GoGBattlesMatchHistory', 'GoGBattlesCoordinator', 'GoGBattlesCards', 'GoGBattlesCardFactory', 'GoGBattlesVault'];
 const Version = 'V1';
-const Users = ['Deployer', 'Jane', 'Bob', 'Chris'];
+const Users = ['Deployer', 'Coordinator', 'Referee', 'Jane', 'Bob', 'Chris'];
+const Roles = ['DEFAULT_ADMIN_ROLE', 'COORDINATOR_ROLE', 'MINTER_ROLE', 'URI_SETTER_ROLE', 'UPGRADER_ROLE'];
 
 let fullNames = {};
 let dappFactory = {};
 let dapp = {};
-let user = {}
+let user = {};
+let roles = {};
 
 const resetScenarioAsync = async () => {
   fullNames = {};
@@ -38,6 +40,13 @@ const resetScenarioAsync = async () => {
   for(let i = 0; i < Users.length && i < signers.length; ++i) {
     user[Users[i]] = signers[i];
   }
+  // populate roles
+  for(let i = 0; i < Roles.length; ++i) {
+    roles[Roles[i]] = ethers.utils.solidityKeccak256(
+      ['string'],
+      [Roles[i]]
+    );
+  }
 };
 
 before(resetScenarioAsync);
@@ -50,7 +59,8 @@ module.exports.getScenario = () => {
     fullNames,
     dappFactory,
     dapp,
-    user
+    user,
+    roles
   };
 }
 module.exports.resetScenarioAsync = async () => {
